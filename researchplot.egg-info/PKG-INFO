@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: researchplot
+Version: 0.1.0
+Summary: A package to create publication-ready plots for researchers.
+Home-page: https://github.com/Devrajsinh-Jhala/ResearchPlot
+Author: Devrajsinh Jhala
+Author-email: jhaladevrajsinh11@gmail.com
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: seaborn
+Requires-Dist: scikit-learn

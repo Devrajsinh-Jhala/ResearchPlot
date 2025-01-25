@@ -1,0 +1,1 @@
+from .plots import bar, scatter, line, histogram, boxplot, heatmap, confusion_matrix, accuracy_vs_epoch, loss_vs_epoch, roc_curve, precision_recall_curve, violinplot, contour_plot, pie, hexbin, pairplot, learning_curves, time_series, radar_chart, dendrogram, quiver, surface_3d, sankey, error_band

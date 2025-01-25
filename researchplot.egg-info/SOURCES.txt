@@ -1,0 +1,10 @@
+README.md
+setup.py
+researchplot/__init__.py
+researchplot/config.py
+researchplot/plots.py
+researchplot.egg-info/PKG-INFO
+researchplot.egg-info/SOURCES.txt
+researchplot.egg-info/dependency_links.txt
+researchplot.egg-info/requires.txt
+researchplot.egg-info/top_level.txt
