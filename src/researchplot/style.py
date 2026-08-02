@@ -32,7 +32,7 @@ def _font_family(profile: VenueProfile) -> str:
     for requested in rule.value:
         name = str(requested)
         if name.casefold() in installed:
-            return installed[name.casefold()]
+            return cast(str, installed[name.casefold()])
     for generic in ("sans-serif", "serif", "monospace"):
         if generic in rule.value:
             return generic
