@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "icml-2026",
+  "name": "ICML 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": ["icml", "international conference on machine learning"],
+  "scope": "ICML 2026 submission and camera-ready template.",
+  "default_width": "single",
+  "verified_on": "2026-08-02",
+  "caveats": [],
+  "sources": [
+    {"id": "icml-instructions", "title": "ICML 2026 Author Instructions", "url": "https://icml.cc/Conferences/2026/AuthorInstructions", "verified_on": "2026-08-02"},
+    {"id": "icml-template", "title": "ICML 2026 LaTeX Style Files", "url": "https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip", "verified_on": "2026-08-02"}
+  ],
+  "rules": [
+    {"id": "figure.width.single", "value": 82.55, "unit": "mm", "level": "required", "source_ids": ["icml-template"], "description": "ICML single-column width derived from text width and column gap."},
+    {"id": "figure.width.double", "value": 171.45, "unit": "mm", "level": "required", "source_ids": ["icml-template"], "description": "ICML full two-column text width."},
+    {"id": "font.family", "value": ["Times", "Times New Roman", "serif"], "unit": null, "level": "required", "source_ids": ["icml-template"], "description": "Papers use 10-point Times."},
+    {"id": "font.size.min", "value": 8.0, "unit": "pt", "level": "inferred", "source_ids": ["icml-template"], "description": "Avoid labels smaller than template secondary text."},
+    {"id": "font.size.target", "value": 10.0, "unit": "pt", "level": "recommended", "source_ids": ["icml-template"], "description": "Match the body font at final size."},
+    {"id": "figure.title.prohibited", "value": true, "unit": null, "level": "required", "source_ids": ["icml-template"], "description": "The author instructions say not to place a title inside the figure."},
+    {"id": "font.pdf.type3.prohibited", "value": true, "unit": null, "level": "required", "source_ids": ["icml-template"], "description": "The PDF must avoid Type 3 fonts."},
+    {"id": "export.formats.vector", "value": ["pdf", "eps"], "unit": null, "level": "recommended", "source_ids": ["icml-template"], "description": "Use embedded vector artwork where possible."}
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "elsevier-generic",
+  "name": "Elsevier Generic Artwork",
+  "kind": "publisher",
+  "year": null,
+  "aliases": ["elsevier", "elsevier artwork"],
+  "scope": "Generic Elsevier artwork sizing and export guidance.",
+  "default_width": "single",
+  "verified_on": "2026-08-02",
+  "caveats": ["Always check the selected Elsevier journal's Guide for Authors."],
+  "sources": [
+    {"id": "elsevier-size", "title": "Elsevier Artwork Sizing", "url": "https://www.elsevier.com/en-au/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing", "verified_on": "2026-08-02"},
+    {"id": "elsevier-overview", "title": "Elsevier Artwork Overview", "url": "https://www.elsevier.com/en-gb/about/policies-and-standards/author/artwork-and-media-instructions/artwork-overview", "verified_on": "2026-08-02"},
+    {"id": "elsevier-faq", "title": "Elsevier Artwork FAQ", "url": "https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-faq", "verified_on": "2026-08-02"}
+  ],
+  "rules": [
+    {"id": "figure.width.minimal", "value": 30.0, "unit": "mm", "level": "required", "source_ids": ["elsevier-size"], "description": "Elsevier minimal artwork target width."},
+    {"id": "figure.width.single", "value": 90.0, "unit": "mm", "level": "required", "source_ids": ["elsevier-size"], "description": "Elsevier single-column target width."},
+    {"id": "figure.width.one-and-half", "value": 140.0, "unit": "mm", "level": "required", "source_ids": ["elsevier-size"], "description": "Elsevier one-and-a-half-column target width."},
+    {"id": "figure.width.double", "value": 190.0, "unit": "mm", "level": "required", "source_ids": ["elsevier-size"], "description": "Elsevier double-column target width."},
+    {"id": "font.family", "value": ["Arial", "Helvetica", "Courier", "Times", "Times New Roman", "sans-serif", "serif"], "unit": null, "level": "recommended", "source_ids": ["elsevier-overview"], "description": "Use one of Elsevier's recommended standard fonts."},
+    {"id": "font.size.target", "value": 8.0, "unit": "pt", "level": "inferred", "source_ids": ["elsevier-overview"], "description": "Conservative generic default; the target journal can differ."},
+    {"id": "line.width.min", "value": 0.25, "unit": "pt", "level": "recommended", "source_ids": ["elsevier-faq"], "description": "Elsevier's recommended minimum line width."},
+    {"id": "export.formats.vector", "value": ["pdf", "eps"], "unit": null, "level": "recommended", "source_ids": ["elsevier-overview"], "description": "Preferred vector formats for charts and diagrams."},
+    {"id": "export.formats.halftone", "value": ["tiff", "jpeg"], "unit": null, "level": "required", "source_ids": ["elsevier-overview"], "description": "Recommended bitmap containers."},
+    {"id": "export.formats.combination", "value": ["tiff", "pdf", "eps"], "unit": null, "level": "recommended", "source_ids": ["elsevier-overview"], "description": "Recommended containers for combination artwork."},
+    {"id": "export.formats.line_art", "value": ["eps", "pdf", "tiff"], "unit": null, "level": "recommended", "source_ids": ["elsevier-overview"], "description": "Prefer vector or high-resolution TIFF for line art."},
+    {"id": "export.min_dpi.halftone", "value": 300, "unit": "dpi", "level": "required", "source_ids": ["elsevier-size"], "description": "Minimum halftone resolution."},
+    {"id": "export.min_dpi.combination", "value": 500, "unit": "dpi", "level": "required", "source_ids": ["elsevier-size"], "description": "Minimum combination-art resolution."},
+    {"id": "export.min_dpi.line_art", "value": 1000, "unit": "dpi", "level": "required", "source_ids": ["elsevier-size"], "description": "Minimum line-art resolution."}
+  ]
+}

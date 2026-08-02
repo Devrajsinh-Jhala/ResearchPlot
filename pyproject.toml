@@ -1,0 +1,123 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "researchplot"
+version = "0.2.0"
+description = "Source-backed venue styling, validation, and export for research figures."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Devrajsinh Jhala", email = "jhaladevrajsinh11@gmail.com" },
+]
+keywords = [
+  "academic",
+  "conference",
+  "figures",
+  "journal",
+  "matplotlib",
+  "publication",
+  "research",
+  "visualization",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: Matplotlib",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Visualization",
+  "Typing :: Typed",
+]
+dependencies = [
+  "matplotlib>=3.8",
+  "pillow>=10",
+  "pypdf>=4",
+]
+
+[project.optional-dependencies]
+plots = [
+  "numpy>=1.24",
+  "pandas>=1.5",
+  "scikit-learn>=1.2",
+  "scipy>=1.10",
+  "seaborn>=0.12",
+]
+dev = [
+  "build>=1.2",
+  "mypy>=1.11",
+  "pytest>=8",
+  "pytest-cov>=5",
+  "ruff>=0.8",
+  "twine>=5",
+  "types-Pillow>=10",
+]
+docs = [
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+  "mkdocstrings[python]>=0.27",
+]
+
+[project.urls]
+Homepage = "https://github.com/Devrajsinh-Jhala/ResearchPlot"
+Documentation = "https://devrajsinh-jhala.github.io/ResearchPlot/"
+Issues = "https://github.com/Devrajsinh-Jhala/ResearchPlot/issues"
+Repository = "https://github.com/Devrajsinh-Jhala/ResearchPlot"
+
+[project.scripts]
+researchplot = "researchplot.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/researchplot"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/CHANGELOG.md",
+  "/CITATION.cff",
+  "/CONTRIBUTING.md",
+  "/docs",
+  "/LICENSE",
+  "/mkdocs.yml",
+  "/README.md",
+  "/SECURITY.md",
+  "/examples",
+  "/pyproject.toml",
+  "/src",
+  "/tests",
+]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config --cov=researchplot --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["researchplot"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+packages = ["researchplot"]
+mypy_path = "src"
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["matplotlib.*", "PIL.*", "pypdf.*", "scipy.*", "seaborn.*", "sklearn.*"]
+ignore_missing_imports = true

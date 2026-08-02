@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "neurips-2026",
+  "name": "NeurIPS 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": ["neurips", "neural information processing systems", "conference on neural information processing systems"],
+  "scope": "NeurIPS 2026 main-track paper template.",
+  "default_width": "full",
+  "verified_on": "2026-08-02",
+  "caveats": ["Track-specific instructions may add requirements."],
+  "sources": [
+    {"id": "neurips-template", "title": "Official NeurIPS 2026 Formatting Instructions", "url": "https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip", "verified_on": "2026-08-02"},
+    {"id": "neurips-cfp", "title": "NeurIPS 2026 Call for Papers", "url": "https://neurips.cc/Conferences/2026/CallForPapers", "verified_on": "2026-08-02"}
+  ],
+  "rules": [
+    {"id": "figure.width.full", "value": 139.7, "unit": "mm", "level": "required", "source_ids": ["neurips-template"], "description": "The single-column NeurIPS text width is 5.5 inches."},
+    {"id": "font.family", "value": ["Times", "Times New Roman", "serif"], "unit": null, "level": "recommended", "source_ids": ["neurips-template"], "description": "Match the conference template's serif typography."},
+    {"id": "font.size.min", "value": 8.0, "unit": "pt", "level": "inferred", "source_ids": ["neurips-template"], "description": "Avoid labels smaller than the template's footnote size."},
+    {"id": "font.size.target", "value": 10.0, "unit": "pt", "level": "recommended", "source_ids": ["neurips-template"], "description": "Match the template's normal text size."},
+    {"id": "line.width.min", "value": 0.5, "unit": "pt", "level": "inferred", "source_ids": ["neurips-template"], "description": "Conservative print-safe line-weight floor."},
+    {"id": "font.pdf.type3.prohibited", "value": true, "unit": null, "level": "required", "source_ids": ["neurips-template"], "description": "PDFs must contain Type 1 or embedded TrueType fonts."},
+    {"id": "export.formats.vector", "value": ["pdf"], "unit": null, "level": "recommended", "source_ids": ["neurips-template"], "description": "The author kit demonstrates PDF figure inclusion."}
+  ]
+}

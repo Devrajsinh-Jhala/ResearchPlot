@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "ieee-journal",
+  "name": "IEEE Journal",
+  "kind": "journal",
+  "year": null,
+  "aliases": ["ieee", "ieee transactions", "institute of electrical and electronics engineers"],
+  "scope": "General IEEE journal graphics guidance; individual journals may add requirements.",
+  "default_width": "single",
+  "verified_on": "2026-08-02",
+  "caveats": ["Check the target journal's author instructions for overrides."],
+  "sources": [
+    {
+      "id": "ieee-size",
+      "title": "IEEE Author Center: Resolution and Size",
+      "url": "https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/resolution-and-size/",
+      "verified_on": "2026-08-02"
+    }
+  ],
+  "rules": [
+    {"id": "figure.width.single", "value": 88.9, "unit": "mm", "level": "required", "source_ids": ["ieee-size"], "description": "IEEE one-column figure width."},
+    {"id": "figure.width.double", "value": 181.864, "unit": "mm", "level": "required", "source_ids": ["ieee-size"], "description": "IEEE two-column figure width."},
+    {"id": "font.size.target", "value": 8.0, "unit": "pt", "level": "inferred", "source_ids": ["ieee-size"], "description": "Conservative readable default at final size; confirm with the journal."},
+    {"id": "line.width.min", "value": 0.5, "unit": "pt", "level": "inferred", "source_ids": ["ieee-size"], "description": "Conservative line-weight floor for print reproduction."},
+    {"id": "color.grayscale.distinguishable", "value": true, "unit": null, "level": "recommended", "source_ids": ["ieee-size"], "description": "Use non-color distinctions when grayscale reproduction is possible."},
+    {"id": "export.formats.vector", "value": ["pdf", "eps"], "unit": null, "level": "required", "source_ids": ["ieee-size"], "description": "IEEE lists PDF, EPS, and PS as acceptable vector formats."},
+    {"id": "export.formats.halftone", "value": ["tiff", "jpeg", "png"], "unit": null, "level": "inferred", "source_ids": ["ieee-size"], "description": "Common raster containers; confirm the target journal's accepted formats."},
+    {"id": "export.formats.combination", "value": ["tiff", "pdf"], "unit": null, "level": "inferred", "source_ids": ["ieee-size"], "description": "Common containers for mixed artwork."},
+    {"id": "export.formats.line_art", "value": ["pdf", "eps", "tiff"], "unit": null, "level": "recommended", "source_ids": ["ieee-size"], "description": "Prefer vector formats for line art."},
+    {"id": "export.min_dpi.halftone", "value": 300, "unit": "dpi", "level": "required", "source_ids": ["ieee-size"], "description": "Color and grayscale non-vector graphics must exceed 300 DPI."},
+    {"id": "export.min_dpi.combination", "value": 300, "unit": "dpi", "level": "required", "source_ids": ["ieee-size"], "description": "Mixed non-vector graphics must meet the color/grayscale floor."},
+    {"id": "export.min_dpi.line_art", "value": 600, "unit": "dpi", "level": "required", "source_ids": ["ieee-size"], "description": "Black-and-white line art must exceed 600 DPI."}
+  ]
+}

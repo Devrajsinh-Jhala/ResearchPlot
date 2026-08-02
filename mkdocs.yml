@@ -1,0 +1,20 @@
+site_name: ResearchPlot
+site_url: https://devrajsinh-jhala.github.io/ResearchPlot/
+repo_url: https://github.com/Devrajsinh-Jhala/ResearchPlot
+theme:
+  name: material
+nav:
+  - Home: index.md
+  - Venue profiles: profiles.md
+  - Gallery: gallery.md
+  - Migration: migration.md
+  - API: api.md
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+markdown_extensions:
+  - admonition
+  - tables

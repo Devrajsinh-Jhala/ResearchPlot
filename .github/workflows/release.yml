@@ -1,0 +1,55 @@
+name: Publish signed release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ contains(github.ref_name, 'rc') && 'testpypi' || 'pypi' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require a verifiable signed tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag_sha="$(git rev-parse "$GITHUB_REF_NAME^{tag}")"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha" --jq .verification.verified)" = true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install build twine
+      - name: Require tag and package versions to match
+        run: |
+          python - <<'PY'
+          import os, pathlib, tomllib
+          project = tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]
+          expected = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          assert project["version"] == expected, (project["version"], expected)
+          PY
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Clean wheel installation
+        run: |
+          python -m venv /tmp/researchplot-release
+          /tmp/researchplot-release/bin/python -m pip install dist/*.whl
+          /tmp/researchplot-release/bin/researchplot venues list
+      - name: Publish release candidate to TestPyPI
+        if: contains(github.ref_name, 'rc')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+      - name: Publish final release to PyPI
+        if: ${{ !contains(github.ref_name, 'rc') }}
+        uses: pypa/gh-action-pypi-publish@release/v1

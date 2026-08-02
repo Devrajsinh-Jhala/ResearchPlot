@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If ResearchPlot helps your research, please cite the software."
+title: "ResearchPlot"
+type: software
+authors:
+  - family-names: "Jhala"
+    given-names: "Devrajsinh"
+version: 0.2.0
+date-released: 2026-08-02
+url: "https://github.com/Devrajsinh-Jhala/ResearchPlot"
+repository-code: "https://github.com/Devrajsinh-Jhala/ResearchPlot"
+license: MIT

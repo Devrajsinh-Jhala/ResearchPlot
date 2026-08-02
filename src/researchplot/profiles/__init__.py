@@ -1,0 +1,1 @@
+"""Bundled, versioned venue profiles."""

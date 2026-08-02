@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "acl-2026",
+  "name": "ACL 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": ["acl", "association for computational linguistics", "annual meeting of the association for computational linguistics"],
+  "scope": "ACL 2026 papers using the official ACL proceedings style.",
+  "default_width": "single",
+  "verified_on": "2026-08-02",
+  "caveats": ["ACL tracks can add content requirements while sharing the proceedings style."],
+  "sources": [
+    {"id": "acl-format", "title": "Official ACL Proceedings Formatting Requirements", "url": "https://github.com/acl-org/acl-style-files/blob/master/formatting.md", "verified_on": "2026-08-02"},
+    {"id": "acl-2026", "title": "ACL 2026 Main Conference Paper Instructions", "url": "https://2026.aclweb.org/calls/main_conference_papers/", "verified_on": "2026-08-02"}
+  ],
+  "rules": [
+    {"id": "figure.width.single", "value": 77.0, "unit": "mm", "level": "required", "source_ids": ["acl-format"], "description": "Official ACL column width."},
+    {"id": "figure.width.double", "value": 160.0, "unit": "mm", "level": "required", "source_ids": ["acl-format"], "description": "Full ACL text width across both columns."},
+    {"id": "font.family", "value": ["Times", "Times New Roman", "serif"], "unit": null, "level": "required", "source_ids": ["acl-format"], "description": "ACL text uses Times Roman or a documented substitute."},
+    {"id": "font.size.min", "value": 9.0, "unit": "pt", "level": "inferred", "source_ids": ["acl-format"], "description": "Do not set figure labels below the smallest specified manuscript text."},
+    {"id": "font.size.target", "value": 10.0, "unit": "pt", "level": "recommended", "source_ids": ["acl-format"], "description": "Match the ACL caption and abstract size at final output."},
+    {"id": "font.pdf.type3.prohibited", "value": true, "unit": null, "level": "required", "source_ids": ["acl-format"], "description": "PDFs must embed all necessary fonts."},
+    {"id": "export.formats.vector", "value": ["pdf"], "unit": null, "level": "recommended", "source_ids": ["acl-format"], "description": "Use embedded PDF vector artwork in the proceedings PDF."}
+  ]
+}
