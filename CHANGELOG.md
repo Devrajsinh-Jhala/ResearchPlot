@@ -3,7 +3,7 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-08-02
 
 ### Added
 
@@ -19,8 +19,6 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   `researchplot[plots]`.
 - Legacy plotting functions return figures/axes and emit deprecation warnings.
 
-## [0.1.1] - Unreleased recovery release
-
 ### Fixed
 
 - Restored `pairplot` and exported `stacked_bar`.
@@ -30,5 +28,4 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   function metadata, and composable return values.
 - Removed generated build products, metadata, bytecode, and figures from source.
 
-[0.2.0]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.1.0...v0.1.1
+[0.2.0]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.1.0...v0.2.0
