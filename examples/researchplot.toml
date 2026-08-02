@@ -1,0 +1,11 @@
+profile = "nature@2026.08.0"
+policy = "complete"
+
+[[figures]]
+path = "data/figure1.svg"
+role = "main"
+width = "single"
+content = "line-art"
+caption = "Response increases quadratically with input."
+alt_text = "A rising curve whose slope increases at each input."
+source_data = "data/figure1.csv"

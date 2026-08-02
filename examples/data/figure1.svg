@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="89mm" height="55mm" viewBox="0 0 890 550" role="img" aria-labelledby="title description">
+  <title id="title">Quadratic response by input</title>
+  <desc id="description">A blue line rises increasingly quickly across four measured inputs.</desc>
+  <rect width="890" height="550" fill="white"/>
+  <g fill="none" stroke="#222" stroke-width="8">
+    <path d="M110 60 V450 H830"/>
+  </g>
+  <g fill="none" stroke="#2f5aa8" stroke-width="10" stroke-linejoin="round">
+    <polyline points="120,430 340,385 560,250 800,70"/>
+  </g>
+  <g fill="#2f5aa8">
+    <circle cx="120" cy="430" r="13"/>
+    <circle cx="340" cy="385" r="13"/>
+    <circle cx="560" cy="250" r="13"/>
+    <circle cx="800" cy="70" r="13"/>
+  </g>
+</svg>

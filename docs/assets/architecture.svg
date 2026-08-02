@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">ResearchPlot compliance architecture</title>
+  <desc id="desc">A versioned venue profile and target metadata feed a rule engine. A Matplotlib figure is inspected, exported transactionally, audited, and recorded in a report and manifest.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4f7ff"/>
+      <stop offset="1" stop-color="#eefcfb"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4051b5"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #4051b5; stroke-width: 2; rx: 12; }
+      .audit { fill: #e9fbf8; stroke: #00796b; }
+      .output { fill: #f1ecff; stroke: #6f42c1; animation: output-pulse 2.2s ease-in-out 2; }
+      .label { fill: #1f2937; font: 600 18px system-ui, -apple-system, "Segoe UI", sans-serif; text-anchor: middle; }
+      .small { fill: #4b5563; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif; text-anchor: middle; }
+      .line { fill: none; stroke: #4051b5; stroke-width: 3; stroke-dasharray: 12 8; marker-end: url(#arrow); animation: evidence-flow 1.4s linear 3; }
+      @keyframes evidence-flow { to { stroke-dashoffset: -40; } }
+      @keyframes output-pulse {
+        0%, 100% { fill: #f1ecff; stroke-width: 2; }
+        50% { fill: #e7dcff; stroke-width: 3; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .line, .output { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1200" height="300" rx="18" fill="url(#background)"/>
+  <rect class="box" x="35" y="36" width="190" height="78"/>
+  <text class="label" x="130" y="69">Versioned profile</text>
+  <text class="small" x="130" y="94">rules + sources + digest</text>
+  <rect class="box" x="35" y="184" width="190" height="78"/>
+  <text class="label" x="130" y="217">Figure target</text>
+  <text class="small" x="130" y="242">role + width + content</text>
+  <rect class="box" x="315" y="110" width="190" height="78"/>
+  <text class="label" x="410" y="143">Rule engine</text>
+  <text class="small" x="410" y="168">typed observations</text>
+  <rect class="box" x="595" y="36" width="190" height="78"/>
+  <text class="label" x="690" y="69">Live inspection</text>
+  <text class="small" x="690" y="94">Matplotlib artists</text>
+  <rect class="box" x="595" y="184" width="190" height="78"/>
+  <text class="label" x="690" y="217">Staged export</text>
+  <text class="small" x="690" y="242">staged write + rollback</text>
+  <rect class="box audit" x="875" y="36" width="190" height="78"/>
+  <text class="label" x="970" y="69">Artifact audit</text>
+  <text class="small" x="970" y="94">PDF · SVG · raster · EPS</text>
+  <rect class="box output" x="875" y="184" width="270" height="78"/>
+  <text class="label" x="1010" y="217">Report + manifest</text>
+  <text class="small" x="1010" y="242">verdict + provenance + hashes</text>
+  <path class="line" d="M225 75 C270 75 270 130 315 142"/>
+  <path class="line" d="M225 223 C270 223 270 168 315 156"/>
+  <path class="line" d="M595 75 C545 75 545 125 505 139"/>
+  <path class="line" d="M505 160 C548 173 550 223 595 223"/>
+  <path class="line" d="M785 223 C830 223 830 98 875 79"/>
+  <path class="line" d="M1065 80 C1125 90 1160 160 1105 184"/>
+</svg>

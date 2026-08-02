@@ -1,0 +1,452 @@
+{
+  "schema_version": 2,
+  "id": "plos-biology",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-02",
+  "name": "PLOS Biology",
+  "kind": "journal",
+  "year": null,
+  "aliases": [
+    "plos biology journal",
+    "public library of science biology"
+  ],
+  "scope": "Production-ready main-article figures for PLOS Biology; supporting-information figures follow separate requirements.",
+  "default_width": "text-column",
+  "verified_on": "2026-08-02",
+  "caveats": [
+    "Initial submissions may embed figures in a manuscript PDF; these rules target individual revised or production figure files.",
+    "Supporting-information figures are outside this profile's scope."
+  ],
+  "sources": [
+    {
+      "id": "plos-biology-figures",
+      "title": "PLOS Biology: Figures",
+      "url": "https://journals.plos.org/plosbiology/s/figures",
+      "locator": "Figure File Requirements, File Format, Dimensions, Resolution, File Size, Text within Figures, Color Mode, Compression, Pages, and How to Submit Figures and Captions",
+      "retrieved_on": "2026-08-02",
+      "verified_on": "2026-08-02"
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.min",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "gte",
+        "value": 66.8,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "PLOS Biology main figures must be at least 6.68 cm wide."
+    },
+    {
+      "id": "figure.width.max",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 190.5,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "PLOS Biology main figures must not exceed the 19.05 cm full-page width."
+    },
+    {
+      "id": "figure.width.text-column",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 132,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ],
+        "widths": [
+          "text-column"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "PLOS recommends figures no wider than 13.2 cm to align with the article text column."
+    },
+    {
+      "id": "figure.width.full",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 190.5,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ],
+        "widths": [
+          "full"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "PLOS Biology full-page figure width is 19.05 cm."
+    },
+    {
+      "id": "figure.max_height",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 222.3,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "PLOS Biology main figures must not exceed 22.23 cm in height."
+    },
+    {
+      "id": "export.formats.main",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "tiff",
+          "eps"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "Individual production figure files must use TIFF or EPS."
+    },
+    {
+      "id": "raster.resolution.range",
+      "probe": "artifact.dpi",
+      "constraint": {
+        "operator": "between",
+        "value": [
+          300,
+          600
+        ],
+        "unit": "dpi",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ],
+        "output_formats": [
+          "tiff"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "TIFF figures must be supplied between 300 and 600 dpi."
+    },
+    {
+      "id": "artifact.file_size.max",
+      "probe": "artifact.file_size",
+      "constraint": {
+        "operator": "lte",
+        "value": 10000000,
+        "unit": "B",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "Each PLOS Biology figure file must be 10 MB or less."
+    },
+    {
+      "id": "font.family",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Arial",
+          "Times",
+          "Symbol"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "Text within figures must use Arial, Times, or Symbol."
+    },
+    {
+      "id": "font.size.min",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 8,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "Figure text must be at least 8 point."
+    },
+    {
+      "id": "font.size.max",
+      "probe": "font.size.max_pt",
+      "constraint": {
+        "operator": "lte",
+        "value": 12,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "Figure text must not exceed 12 point."
+    },
+    {
+      "id": "figure.title.prohibited",
+      "probe": "figure.has_title",
+      "constraint": {
+        "operator": "eq",
+        "value": false,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "Author names, article titles, figure numbers, titles, and captions must remain outside the figure file."
+    },
+    {
+      "id": "raster.color_mode.allowed",
+      "probe": "raster.mode",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "RGB",
+          "L"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ],
+        "output_formats": [
+          "tiff"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "TIFF artwork must use 8-bit-per-channel RGB or grayscale mode."
+    },
+    {
+      "id": "raster.compression.required",
+      "probe": "raster.compression",
+      "constraint": {
+        "operator": "eq",
+        "value": "lzw",
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ],
+        "output_formats": [
+          "tiff"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "PLOS Biology requires LZW compression for TIFF files."
+    },
+    {
+      "id": "raster.pages.max",
+      "probe": "artifact.page_count",
+      "constraint": {
+        "operator": "lte",
+        "value": 1,
+        "unit": "page",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ],
+        "output_formats": [
+          "tiff"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "A TIFF figure must contain exactly one page."
+    },
+    {
+      "id": "file.naming.fig_sequence",
+      "probe": "metadata.filename.compliant",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "main"
+        ]
+      },
+      "verification": "manual",
+      "phases": [
+        "bundle"
+      ],
+      "level": "required",
+      "source_ids": [
+        "plos-biology-figures"
+      ],
+      "description": "Revised figure files must be named in numeric order as Fig1.tif, Fig2.eps, and so on, matching citations and captions."
+    }
+  ]
+}

@@ -1,35 +1,361 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "id": "nature",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-02",
   "name": "Nature",
   "kind": "journal",
   "year": null,
-  "aliases": ["nature journal", "nature flagship"],
+  "aliases": [
+    "nature journal",
+    "nature flagship"
+  ],
   "scope": "Final artwork for the flagship Nature journal.",
   "default_width": "single",
   "verified_on": "2026-08-02",
-  "caveats": ["Nature Portfolio titles can publish different journal-specific requirements."],
+  "caveats": [
+    "Nature Portfolio titles can publish different journal-specific requirements."
+  ],
   "sources": [
     {
       "id": "nature-panels",
       "title": "Nature Research Figure Guide: Building and Exporting Figure Panels",
       "url": "https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/",
+      "locator": "Building and exporting figure panels: size, type, lines, and formats",
+      "retrieved_on": "2026-08-02",
       "verified_on": "2026-08-02"
     }
   ],
   "rules": [
-    {"id": "figure.width.single", "value": 89.0, "unit": "mm", "level": "required", "source_ids": ["nature-panels"], "description": "Nature single-column width."},
-    {"id": "figure.width.double", "value": 183.0, "unit": "mm", "level": "required", "source_ids": ["nature-panels"], "description": "Nature double-column width."},
-    {"id": "figure.max_height", "value": 170.0, "unit": "mm", "level": "required", "source_ids": ["nature-panels"], "description": "Maximum figure height leaves space for the legend."},
-    {"id": "font.family", "value": ["Arial", "Helvetica", "sans-serif"], "unit": null, "level": "required", "source_ids": ["nature-panels"], "description": "Use a standard sans-serif font such as Arial or Helvetica."},
-    {"id": "font.size.min", "value": 5.0, "unit": "pt", "level": "required", "source_ids": ["nature-panels"], "description": "Minimum text size at final output size."},
-    {"id": "font.size.max", "value": 7.0, "unit": "pt", "level": "required", "source_ids": ["nature-panels"], "description": "Maximum text size at final output size."},
-    {"id": "font.size.target", "value": 7.0, "unit": "pt", "level": "recommended", "source_ids": ["nature-panels"], "description": "Default to the upper end of Nature's permitted range."},
-    {"id": "line.width.min", "value": 0.25, "unit": "pt", "level": "required", "source_ids": ["nature-panels"], "description": "Lines thinner than this can disappear in print."},
-    {"id": "figure.title.prohibited", "value": true, "unit": null, "level": "recommended", "source_ids": ["nature-panels"], "description": "Keep explanatory titles in the figure legend rather than the artwork."},
-    {"id": "font.pdf.type3.prohibited", "value": true, "unit": null, "level": "required", "source_ids": ["nature-panels"], "description": "Text must remain editable and fonts must be embedded."},
-    {"id": "export.formats.vector", "value": ["pdf", "eps", "svg"], "unit": null, "level": "required", "source_ids": ["nature-panels"], "description": "Nature requires editable vector artwork for main figures."},
-    {"id": "export.formats.halftone", "value": ["jpeg", "tiff"], "unit": null, "level": "recommended", "source_ids": ["nature-panels"], "description": "Raster formats apply to Extended Data and image-based content."},
-    {"id": "export.min_dpi.halftone", "value": 300, "unit": "dpi", "level": "recommended", "source_ids": ["nature-panels"], "description": "Extended Data images should be supplied at up to 300 DPI."}
+    {
+      "id": "figure.width.single",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 89,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "widths": [
+          "single"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Nature single-column width."
+    },
+    {
+      "id": "figure.width.double",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 183,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "widths": [
+          "double"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Nature double-column width."
+    },
+    {
+      "id": "figure.max_height",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 170,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Maximum figure height leaves space for the legend."
+    },
+    {
+      "id": "font.family",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Arial",
+          "Helvetica",
+          "sans-serif"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Use a standard sans-serif font such as Arial or Helvetica."
+    },
+    {
+      "id": "font.size.min",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 5,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Minimum text size at final output size."
+    },
+    {
+      "id": "font.size.max",
+      "probe": "font.size.max_pt",
+      "constraint": {
+        "operator": "lte",
+        "value": 7,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Maximum text size at final output size."
+    },
+    {
+      "id": "font.size.target",
+      "probe": "font.size.max_pt",
+      "constraint": {
+        "operator": "eq",
+        "value": 7,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Default to the upper end of Nature's permitted range."
+    },
+    {
+      "id": "line.width.min",
+      "probe": "line.width.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 0.25,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Lines thinner than this can disappear in print."
+    },
+    {
+      "id": "figure.title.prohibited",
+      "probe": "figure.has_title",
+      "constraint": {
+        "operator": "eq",
+        "value": false,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Keep explanatory titles in the figure legend rather than the artwork."
+    },
+    {
+      "id": "font.pdf.type3.prohibited",
+      "probe": "pdf.type3_font_count",
+      "constraint": {
+        "operator": "eq",
+        "value": 0,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "output_formats": [
+          "pdf"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Text must remain editable rather than using Type 3 glyphs."
+    },
+    {
+      "id": "font.pdf.embedding.required",
+      "probe": "pdf.unembedded_font_count",
+      "constraint": {
+        "operator": "eq",
+        "value": 0,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "output_formats": [
+          "pdf"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "All fonts in PDF artwork must be embedded."
+    },
+    {
+      "id": "export.formats.vector",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "pdf",
+          "eps",
+          "svg"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "content_kinds": [
+          "data_visualization",
+          "line_art"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Use one of Nature's supported vector file formats for data visualizations and line art."
+    },
+    {
+      "id": "export.formats.halftone",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "jpeg",
+          "tiff"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "content_kinds": [
+          "halftone",
+          "photograph"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Raster formats apply to Extended Data and image-based content."
+    },
+    {
+      "id": "export.min_dpi.halftone",
+      "probe": "artifact.dpi",
+      "constraint": {
+        "operator": "gte",
+        "value": 300,
+        "unit": "dpi",
+        "tolerance": null
+      },
+      "applies_to": {
+        "output_formats": [
+          "png",
+          "jpeg",
+          "tiff"
+        ],
+        "content_kinds": [
+          "halftone",
+          "photograph"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "nature-panels"
+      ],
+      "description": "Extended Data images should be supplied at up to 300 DPI."
+    }
   ]
 }

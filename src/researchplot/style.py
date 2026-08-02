@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from contextlib import AbstractContextManager
-from pathlib import Path
 from types import TracebackType
 from typing import Any, cast
 
@@ -12,9 +11,8 @@ import matplotlib as mpl
 from matplotlib import font_manager
 from matplotlib.figure import Figure
 
-from .models import ArtworkType, ValidationReport, VenueProfile
-from .registry import resolve_venue
-from .validation import validate_figure
+from .models import VenueProfile
+from .registry import resolve_profile
 
 
 def _numeric_rule(profile: VenueProfile, rule_id: str, default: float) -> float:
@@ -36,7 +34,11 @@ def _font_family(profile: VenueProfile) -> str:
     for generic in ("sans-serif", "serif", "monospace"):
         if generic in rule.value:
             return generic
-    return str(rule.value[-1])
+    fallback_path = font_manager.findfont(
+        font_manager.FontProperties(family=["sans-serif"]), fallback_to_default=True
+    )
+    fallback_name = font_manager.FontProperties(fname=fallback_path).get_name()
+    return str(fallback_name or "sans-serif")
 
 
 def _validated_overrides(overrides: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -64,8 +66,8 @@ class StyleContext(AbstractContextManager["StyleContext"]):
         latex: bool = False,
         overrides: Mapping[str, Any] | None = None,
     ) -> None:
-        self.profile = resolve_venue(venue)
-        self.width = width or self.profile.default_width
+        self.profile = resolve_profile(venue)
+        self.width = width if width is not None else self.profile.default_width
         self.width_mm = self.profile.width_mm(self.width)
         self.latex = bool(latex)
         self.overrides = _validated_overrides(overrides)
@@ -129,13 +131,16 @@ class StyleContext(AbstractContextManager["StyleContext"]):
         height-to-width ratio and an official maximum height is respected.
         """
 
-        height_mm = float(height) if height is not None else self.width_mm * float(aspect)
-        max_height = self.profile.get_rule("figure.max_height")
-        if max_height is not None and isinstance(max_height.value, (int, float)):
-            height_mm = min(height_mm, float(max_height.value))
+        height_mm = self._height_mm(height=height, aspect=aspect)
         if height_mm <= 0:
             raise ValueError("Figure height must be greater than zero.")
-        kwargs.setdefault("figsize", (self.width_mm / 25.4, height_mm / 25.4))
+        expected = (self.width_mm / 25.4, height_mm / 25.4)
+        supplied = kwargs.pop("figsize", None)
+        if supplied is not None and tuple(float(item) for item in supplied) != expected:
+            raise ValueError(
+                "figsize cannot override a venue target; use height= or aspect= instead."
+            )
+        kwargs["figsize"] = expected
         return Figure(**kwargs)
 
     def subplots(
@@ -149,67 +154,28 @@ class StyleContext(AbstractContextManager["StyleContext"]):
 
         from matplotlib import pyplot as plt
 
+        height_mm = self._height_mm(height=height, aspect=aspect)
+        if height_mm <= 0:
+            raise ValueError("Figure height must be greater than zero.")
+        expected = (self.width_mm / 25.4, height_mm / 25.4)
+        supplied = kwargs.pop("figsize", None)
+        if supplied is not None and tuple(float(item) for item in supplied) != expected:
+            raise ValueError(
+                "figsize cannot override a venue target; use height= or aspect= instead."
+            )
+        kwargs["figsize"] = expected
+        return cast(tuple[Figure, Any], plt.subplots(*args, **kwargs))
+
+    def _height_mm(self, *, height: float | None, aspect: float) -> float:
+        if aspect <= 0:
+            raise ValueError("Figure aspect must be greater than zero.")
         height_mm = float(height) if height is not None else self.width_mm * float(aspect)
         max_height = self.profile.get_rule("figure.max_height")
         if max_height is not None and isinstance(max_height.value, (int, float)):
-            height_mm = min(height_mm, float(max_height.value))
-        if height_mm <= 0:
-            raise ValueError("Figure height must be greater than zero.")
-        kwargs.setdefault("figsize", (self.width_mm / 25.4, height_mm / 25.4))
-        return cast(tuple[Figure, Any], plt.subplots(*args, **kwargs))
-
-    def validate(
-        self,
-        fig: Figure,
-        *,
-        artwork: ArtworkType | str = ArtworkType.VECTOR,
-    ) -> ValidationReport:
-        """Validate ``fig`` against this context's resolved profile and width."""
-
-        with mpl.rc_context(rc=self.rc):
-            return validate_figure(
-                fig,
-                venue=self.profile,
-                width=self.width,
-                artwork=artwork,
-            )
-
-    def export(
-        self,
-        fig: Figure,
-        target: str | Path,
-        *,
-        artwork: ArtworkType | str = ArtworkType.VECTOR,
-        formats: tuple[str, ...] | list[str] | None = None,
-        strict: bool = True,
-        dpi: int | None = None,
-        **savefig_kwargs: Any,
-    ) -> tuple[Path, ...]:
-        """Validate and export ``fig`` using this context's profile."""
-
-        from .export import export_figure
-
-        with mpl.rc_context(rc=self.rc):
-            return export_figure(
-                fig,
-                target,
-                venue=self.profile,
-                width=self.width,
-                artwork=artwork,
-                formats=formats,
-                strict=strict,
-                dpi=dpi,
-                **savefig_kwargs,
-            )
-
-
-def use(
-    venue: str | VenueProfile,
-    *,
-    width: str | None = None,
-    latex: bool = False,
-    overrides: Mapping[str, Any] | None = None,
-) -> StyleContext:
-    """Return a reversible Matplotlib venue style context."""
-
-    return StyleContext(venue, width=width, latex=latex, overrides=overrides)
+            maximum = float(max_height.value)
+            if height is not None and height_mm > maximum:
+                raise ValueError(
+                    f"Requested height {height_mm:g} mm exceeds the {maximum:g} mm venue limit."
+                )
+            height_mm = min(height_mm, maximum)
+        return height_mm

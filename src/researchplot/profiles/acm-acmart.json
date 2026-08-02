@@ -1,0 +1,82 @@
+{
+  "schema_version": 2,
+  "id": "acm-acmart",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-02",
+  "name": "ACM acmart",
+  "kind": "publisher",
+  "year": null,
+  "aliases": [
+    "acm",
+    "association for computing machinery",
+    "acmart template"
+  ],
+  "scope": "Accessibility metadata shared by ACM articles prepared with the official acmart or primary article templates.",
+  "default_width": null,
+  "verified_on": "2026-08-02",
+  "caveats": [
+    "ACM publication formats use different page and column geometries, so this generic profile intentionally leaves physical widths unspecified.",
+    "The target conference or journal can impose additional figure and accessibility requirements."
+  ],
+  "sources": [
+    {
+      "id": "acm-layout-template",
+      "title": "ACM Submission Template for ACM Papers",
+      "url": "https://www.acm.org/binaries/content/assets/publications/taps/acm_layout_submission_template.pdf",
+      "locator": "Section 2.2.4, Figure Descriptions",
+      "retrieved_on": "2026-08-02",
+      "verified_on": "2026-08-02"
+    },
+    {
+      "id": "acm-primary-template",
+      "title": "Instructions for Applying the ACM Primary Article Template",
+      "url": "https://authors.acm.org/binaries/content/assets/publications/taps/acm_master_article_template_instructions.pdf",
+      "locator": "Check Paragraph Styles, Language and Supply Alt Text for Figures and Tables",
+      "retrieved_on": "2026-08-02",
+      "verified_on": "2026-08-02"
+    }
+  ],
+  "rules": [
+    {
+      "id": "metadata.alt_text.present",
+      "probe": "metadata.alt_text.present",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "bundle"
+      ],
+      "level": "required",
+      "source_ids": [
+        "acm-layout-template",
+        "acm-primary-template"
+      ],
+      "description": "Every non-decorative figure must include a plain-text figure description (alt text)."
+    },
+    {
+      "id": "metadata.alt_text.distinct_from_caption",
+      "probe": "metadata.alt_text.distinct_from_caption",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "manual",
+      "phases": [
+        "bundle"
+      ],
+      "level": "required",
+      "source_ids": [
+        "acm-layout-template"
+      ],
+      "description": "The figure description must add important information instead of repeating the caption."
+    }
+  ]
+}

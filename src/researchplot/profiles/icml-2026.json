@@ -1,26 +1,223 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "id": "icml-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-02",
   "name": "ICML 2026",
   "kind": "conference",
   "year": 2026,
-  "aliases": ["icml", "international conference on machine learning"],
+  "aliases": [
+    "icml",
+    "international conference on machine learning"
+  ],
   "scope": "ICML 2026 submission and camera-ready template.",
   "default_width": "single",
   "verified_on": "2026-08-02",
   "caveats": [],
   "sources": [
-    {"id": "icml-instructions", "title": "ICML 2026 Author Instructions", "url": "https://icml.cc/Conferences/2026/AuthorInstructions", "verified_on": "2026-08-02"},
-    {"id": "icml-template", "title": "ICML 2026 LaTeX Style Files", "url": "https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip", "verified_on": "2026-08-02"}
+    {
+      "id": "icml-instructions",
+      "title": "ICML 2026 Author Instructions",
+      "url": "https://icml.cc/Conferences/2026/AuthorInstructions",
+      "locator": "Author instructions: figures and paper preparation",
+      "retrieved_on": "2026-08-02",
+      "verified_on": "2026-08-02"
+    },
+    {
+      "id": "icml-template",
+      "title": "ICML 2026 LaTeX Style Files",
+      "url": "https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip",
+      "locator": "ICML 2026 LaTeX style: page geometry and typography",
+      "retrieved_on": "2026-08-02",
+      "verified_on": "2026-08-02"
+    }
   ],
   "rules": [
-    {"id": "figure.width.single", "value": 82.55, "unit": "mm", "level": "required", "source_ids": ["icml-template"], "description": "ICML single-column width derived from text width and column gap."},
-    {"id": "figure.width.double", "value": 171.45, "unit": "mm", "level": "required", "source_ids": ["icml-template"], "description": "ICML full two-column text width."},
-    {"id": "font.family", "value": ["Times", "Times New Roman", "serif"], "unit": null, "level": "required", "source_ids": ["icml-template"], "description": "Papers use 10-point Times."},
-    {"id": "font.size.min", "value": 8.0, "unit": "pt", "level": "inferred", "source_ids": ["icml-template"], "description": "Avoid labels smaller than template secondary text."},
-    {"id": "font.size.target", "value": 10.0, "unit": "pt", "level": "recommended", "source_ids": ["icml-template"], "description": "Match the body font at final size."},
-    {"id": "figure.title.prohibited", "value": true, "unit": null, "level": "required", "source_ids": ["icml-template"], "description": "The author instructions say not to place a title inside the figure."},
-    {"id": "font.pdf.type3.prohibited", "value": true, "unit": null, "level": "required", "source_ids": ["icml-template"], "description": "The PDF must avoid Type 3 fonts."},
-    {"id": "export.formats.vector", "value": ["pdf", "eps"], "unit": null, "level": "recommended", "source_ids": ["icml-template"], "description": "Use embedded vector artwork where possible."}
+    {
+      "id": "figure.width.single",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 82.55,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "widths": [
+          "single"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "ICML single-column width derived from text width and column gap."
+    },
+    {
+      "id": "figure.width.double",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 171.45,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "widths": [
+          "double"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "ICML full two-column text width."
+    },
+    {
+      "id": "font.family",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Times",
+          "Times New Roman",
+          "serif"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "Papers use 10-point Times."
+    },
+    {
+      "id": "font.size.min",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 8,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "inferred",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "Avoid labels smaller than template secondary text."
+    },
+    {
+      "id": "font.size.target",
+      "probe": "font.size.max_pt",
+      "constraint": {
+        "operator": "eq",
+        "value": 10,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "Match the body font at final size."
+    },
+    {
+      "id": "figure.title.prohibited",
+      "probe": "figure.has_title",
+      "constraint": {
+        "operator": "eq",
+        "value": false,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "The author instructions say not to place a title inside the figure."
+    },
+    {
+      "id": "font.pdf.type3.prohibited",
+      "probe": "pdf.type3_font_count",
+      "constraint": {
+        "operator": "eq",
+        "value": 0,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "output_formats": [
+          "pdf"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "The PDF must avoid Type 3 fonts."
+    },
+    {
+      "id": "export.formats.vector",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "pdf",
+          "eps"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "content_kinds": [
+          "data_visualization",
+          "line_art"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "icml-template"
+      ],
+      "description": "Use embedded vector artwork where possible."
+    }
   ]
 }

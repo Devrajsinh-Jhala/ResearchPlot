@@ -1,147 +1,223 @@
 # ResearchPlot
 
-ResearchPlot creates Matplotlib figures at verified publication widths, explains
-where each venue rule came from, validates live figures, and audits exported files.
-It is a compliance assistant—not a guarantee that a publisher will accept a figure.
+**Source-backed venue compliance, artifact auditing, and submission bundles for
+Matplotlib figures.**
 
 [![PyPI](https://img.shields.io/pypi/v/researchplot-venues.svg)](https://pypi.org/project/researchplot-venues/)
+[![Python](https://img.shields.io/pypi/pyversions/researchplot-venues.svg)](https://pypi.org/project/researchplot-venues/)
 [![CI](https://github.com/Devrajsinh-Jhala/ResearchPlot/actions/workflows/ci.yml/badge.svg)](https://github.com/Devrajsinh-Jhala/ResearchPlot/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://devrajsinh-jhala.github.io/ResearchPlot/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/LICENSE)
 
-## Installation
+ResearchPlot turns a venue name into a reproducible figure target. It styles a
+Matplotlib figure at the requested physical width, evaluates source-backed rules,
+exports transactionally, audits the files that were actually written, and can assemble a
+submission bundle with hashes and provenance.
+
+It is a compliance assistant, not an acceptance guarantee. Every result distinguishes
+verified facts from recommendations, inferences, manual requirements, and checks the
+software could not establish.
+
+![ResearchPlot compliance architecture](https://raw.githubusercontent.com/Devrajsinh-Jhala/ResearchPlot/main/docs/assets/architecture.svg)
+
+## Install
 
 ```bash
 python -m pip install researchplot-venues
 ```
 
-The PyPI distribution is named `researchplot-venues`; the Python package and CLI
-remain `researchplot`, so existing imports and commands do not change.
-
-The core requires Python 3.10+ and does not require LaTeX or network access. Install
-the deprecated high-level plotting helpers separately:
-
-```bash
-python -m pip install "researchplot-venues[plots]"
-```
-
-## Venue-native workflow
+The distribution is called `researchplot-venues`; the import and command remain
+`researchplot`:
 
 ```python
+import researchplot as rp
+```
+
+ResearchPlot 1.x requires Python 3.11 or newer. It works offline at runtime, does not
+download fonts or templates, and does not require LaTeX. The old plotting wrappers are
+not shipped in 1.x. If an older project still needs them, pin the final 0.2 release in
+a separate environment:
+
+```bash
+python -m pip install "researchplot-venues[plots]==0.2.1"
+```
+
+## Create and verify one figure
+
+```python
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import researchplot as rp
 
-x = [0, 1, 2, 3]
-y = [0, 1, 4, 9]
+target = rp.target(
+    "nature@2026.08.0",
+    role="main",
+    width="single",
+    content="line-art",
+)
 
-with rp.use("CVPR 2026", width="single") as style:
-    fig, ax = style.subplots()
-    ax.plot(x, y, marker="o")
-    ax.set(xlabel="Input", ylabel="Output")
+with target.style() as style:
+    fig, ax = style.subplots(aspect=0.62)
+    ax.plot([0, 1, 2, 3], [0, 1, 4, 9], marker="o")
+    ax.set(xlabel="Input", ylabel="Response")
 
-    report = style.validate(fig)
-    print(report)
-    paths = style.export(fig, "figure1", artwork="vector")
+    result = target.export(fig, Path("submission") / "figure1.pdf", policy="complete")
 
+print(result.report.verdict)
+print(result.paths)
+print(result.manifest_path)
 plt.close(fig)
 ```
 
-Exact IDs are reproducible. A bare conference name such as `cvpr` resolves to the
-newest bundled verified year and warns with the resolved ID. Unknown and ambiguous
-names raise an error with suggestions; they never silently become IEEE.
+`policy="complete"` rejects both known required violations and unresolved required
+checks. It stages output in a temporary location, audits the resulting artifact, and
+starts the final commit only after the selected policy succeeds. Handled commit failures
+trigger rollback. Multi-file destinations are replaced sequentially, so abrupt process
+termination and non-cooperating concurrent writers remain outside that guarantee.
+
+## Build a submission bundle
 
 ```python
-profile = rp.resolve_venue("Nature")
-print(profile.width_options)  # ('single', 'double')
-print(profile.width_mm("single"))  # 89.0
-print(profile.sources)  # official guidance and verification dates
-```
-
-## Verified catalog
-
-| Profile | Final widths | Scope |
-| --- | --- | --- |
-| `ieee-journal` | 88.9 / 181.864 mm | General IEEE journal artwork |
-| `nature` | 89 / 183 mm | Flagship Nature journal |
-| `elsevier-generic` | 30 / 90 / 140 / 190 mm | Generic Elsevier artwork |
-| `neurips-2026` | 139.7 mm | NeurIPS 2026 template |
-| `icml-2026` | 82.55 / 171.45 mm | ICML 2026 instructions |
-| `cvpr-2026` | 83.34375 / 174.625 mm | CVPR 2026 author kit |
-| `acl-2026` | 77 / 160 mm | ACL 2026 formatting rules |
-
-Every bundled rule is `required`, `recommended`, or `inferred`. Missing official
-guidance stays unspecified. Profiles include official URLs, verification dates,
-scope, and caveats; all runtime resolution is offline.
-
-## Validation and file auditing
-
-```python
-report = rp.validate_figure(fig, venue="nature", width="single")
-if not report.passed:
-    for failure in report.failures:
-        print(failure.message, failure.source_urls)
-
-report = rp.audit_file(
-    "figure1.pdf",
-    venue="nature",
-    width="single",
-    artwork="vector",
+submission = rp.Submission(
+    "nature@2026.08.0",
+    output_dir="submission",
+    policy="complete",
 )
-print(report.to_dict())
+submission.add(
+    "figure1",
+    fig,
+    role="main",
+    width="single",
+    content="line-art",
+    formats=("pdf",),
+    alt_text="A line chart whose response rises quadratically with input.",
+    source_data="data/figure1.csv",
+)
+bundle = submission.build()
+print(bundle.manifest_path)
+print(bundle.passed)
 ```
 
-Required violations fail; recommendations warn; inferred guidance is informational.
-Anything the validator cannot establish is marked `skip`, not passed. Strict export
-blocks only required failures.
+The manifest records the ResearchPlot version, immutable profile coordinate and digest,
+full source metadata and caveats, target metadata, file SHA-256 hashes, automated
+findings, manual attestations, captions, alt text, and copied source-data files when
+provided.
 
-The auditor supports PDF, SVG, PNG, JPEG, TIFF, and EPS. It checks applicable file
-format, physical dimensions, raster DPI and color mode metadata, PDF font embedding
-and Type 3 fonts, SVG dimensions/text presence, and EPS bounding boxes.
+## Compliance has three verdicts
 
-## Command line
+| Verdict | Meaning |
+| --- | --- |
+| `COMPLIANT` | Every applicable required rule was checked and passed. |
+| `NON_COMPLIANT` | At least one applicable required rule failed. |
+| `INDETERMINATE` | No required rule failed, but at least one required rule could not be established. |
+
+Rule level and check outcome are separate. A recommendation can warn without blocking,
+while inferred guidance is informational. A required `SKIP` is never presented as a
+pass.
+
+Export policies let CI choose the boundary:
+
+- `violations`: block known required failures;
+- `complete`: also block unresolved required checks;
+- `off`: always return evidence without blocking.
+
+## Profiles are versioned evidence
+
+Coordinates use `<profile-id>@<revision>`, for example
+`nature@2026.08.0` or `cvpr-2026@2026.08.0`. Pinning the coordinate makes a paper
+reproducible. An unpinned ID or friendly alias resolves to a bundled revision and
+warns, so a changing default cannot go unnoticed.
+
+The initial 1.0 catalog covers IEEE journals, Nature, generic Elsevier artwork,
+NeurIPS 2026, ICML 2026, CVPR 2026, ACL 2026, PLOS Biology, and ACM `acmart`.
+Missing official guidance remains unspecified rather than being invented. Run:
 
 ```bash
-researchplot venues list
-researchplot venues search cvpr
-researchplot venues info cvpr-2026
-researchplot doctor --venue nature
-researchplot audit figure.pdf --venue nature --width single --artwork vector
-researchplot audit figure.pdf --venue nature --width single --artwork vector --json
+researchplot profile list
+researchplot profile show nature@2026.08.0
+researchplot explain figure.width.single --profile nature@2026.08.0
 ```
 
-Exit code `0` means no required failures, `1` means compliance failures, and `2`
-means invalid input, an unreadable file, or a missing required capability.
+| Profile | Final width options |
+| --- | --- |
+| `ieee-journal@2026.08.0` | 88.9 / 181.864 mm |
+| `nature@2026.08.0` | 89 / 183 mm |
+| `elsevier-generic@2026.08.0` | 30 / 90 / 140 / 190 mm |
+| `neurips-2026@2026.08.0` | 139.7 mm |
+| `icml-2026@2026.08.0` | 82.55 / 171.45 mm |
+| `cvpr-2026@2026.08.0` | 83.34375 / 174.625 mm |
+| `acl-2026@2026.08.0` | 77 / 160 mm |
+| `plos-biology@2026.08.0` | 132 / 190.5 mm; 66.8–190.5 mm allowed range |
+| `acm-acmart@2026.08.0` | Bundle metadata only; no generic width |
 
-## Legacy plotting helpers
+Profiles are bundled JSON validated against a published schema. Every rule states its
+applicability, strength, verification mode, official source, section or page locator,
+and verification date. Runtime resolution remains offline.
 
-The original positional interfaces remain available in `0.2.x` and display by
-default, but emit a deprecation warning. They now return `(Figure, Axes)` (or a
-Seaborn `PairGrid`) and accept keyword-only `ax=None` and `show=True`.
+## Check files and projects in CI
 
-```python
-from researchplot import bar, pairplot, stacked_bar
+```toml
+# researchplot.toml
+profile = "nature@2026.08.0"
+policy = "complete"
 
-fig, ax = bar([3, 5, 2], ["A", "B", "C"], show=False)
+[[figures]]
+path = "figures/figure1.pdf"
+role = "main"
+width = "single"
+content = "line-art"
+alt_text = "A line chart comparing the measured response across four inputs."
+source_data = "data/figure1.csv"
 ```
 
-Supported helpers: `bar`, `stacked_bar`, `scatter`, `line`, `histogram`, `boxplot`,
-`heatmap`, `confusion_matrix`, `accuracy_vs_epoch`, `loss_vs_epoch`, `roc_curve`,
-`precision_recall_curve`, `violinplot`, `contour_plot`, `pie`, `hexbin`, `pairplot`,
-`learning_curves`, `time_series`, `radar_chart`, `dendrogram`, `quiver`, `surface_3d`,
-`sankey`, and `error_band`.
+```bash
+researchplot check --config researchplot.toml
+researchplot check --config researchplot.toml --format json
+researchplot check --config researchplot.toml --format sarif > researchplot.sarif
+researchplot bundle build --config researchplot.toml
+```
 
-`science`, `cell`, `springer`, and `pnas` remain unverified legacy styles only. The
-generic `elsevier` alias also warns that a target journal can override its rules.
-See the [migration guide](docs/migration.md) for native replacements.
+Exit codes are stable: `0` compliant, `1` non-compliant, `2` invalid input or a
+required capability failure, and `3` indeterminate. SARIF output can be uploaded to
+GitHub code scanning for inline annotations.
 
-## Limitations
+## What ResearchPlot inspects
 
-- Official venue instructions can change and journal-specific rules can override a
-  publisher profile. Always follow the linked official sources and profile caveats.
-- Source date and file metadata cannot prove every visual property; unresolved checks
-  remain visible as skipped checks.
-- LaTeX is external and opt-in (`rp.use(..., latex=True)`). ResearchPlot never
-  downloads fonts or templates.
-- Automatic template ingestion, online profile updates, other plotting backends, and
-  broader venue coverage are post-0.2 roadmap work.
+- Exact physical width and maximum height, with explicit tolerance.
+- Font family and size, line and marker sizes, and prohibited in-figure titles.
+- Color-only series distinction when a profile includes the applicable accessibility
+  rule, plus bundle alt-text presence for ACM.
+- PDF page boxes across all pages, recursive font resources, embedding, and Type 3
+  fonts.
+- SVG physical dimensions, `viewBox`, text, font declarations, external references,
+  and embedded assets.
+- PNG, JPEG, and TIFF dimensions, effective DPI, color mode, bit depth, ICC metadata,
+  compression, and file size.
+- EPS format, `BoundingBox`, and `HiResBoundingBox` dimensions.
 
-Documentation lives in [`docs/`](docs/index.md). Contributions that add a profile
-must include traceable official sources and tests. ResearchPlot is MIT licensed.
+Unobservable properties are reported as skipped. They are not guessed and do not
+silently pass.
+
+## Documentation
+
+- [Getting started](https://devrajsinh-jhala.github.io/ResearchPlot/getting-started/)
+- [Architecture and compliance model](https://devrajsinh-jhala.github.io/ResearchPlot/architecture/)
+- [Profile provenance](https://devrajsinh-jhala.github.io/ResearchPlot/profiles/)
+- [Project configuration and CLI](https://devrajsinh-jhala.github.io/ResearchPlot/configuration/)
+- [Submission bundles](https://devrajsinh-jhala.github.io/ResearchPlot/bundles/)
+- [Migration from 0.2](https://devrajsinh-jhala.github.io/ResearchPlot/migration/)
+- [Python API](https://devrajsinh-jhala.github.io/ResearchPlot/api/)
+
+## Scope and safety
+
+ResearchPlot does not interpret scientific correctness, detect manipulation, replace a
+publisher's instructions, generate figures or alt text with AI, scrape templates at
+runtime, or guarantee acceptance. A journal-specific instruction always overrides a
+generic publisher profile. Review each finding's linked source and use
+`researchplot profile show` to inspect all profile caveats.
+
+ResearchPlot is MIT licensed. See
+[CONTRIBUTING.md](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/CONTRIBUTING.md)
+before proposing a profile or behavioral change, and cite the project using
+[CITATION.cff](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/CITATION.cff).

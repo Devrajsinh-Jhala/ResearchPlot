@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Devrajsinh-Jhala/ResearchPlot/v1.0.0/schemas/report.schema.json",
+  "title": "ResearchPlot compliance report",
+  "description": "Stable machine-readable output produced by Report.to_dict().",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile",
+    "profile_digest",
+    "sources",
+    "caveats",
+    "target",
+    "verdict",
+    "summary",
+    "findings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_digest": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{64})?$"
+    },
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source"}
+    },
+    "caveats": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "verdict": {
+      "enum": [
+        "compliant",
+        "non_compliant",
+        "indeterminate"
+      ]
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "target": {
+      "type": "object",
+      "required": [
+        "role",
+        "width",
+        "content",
+        "output_format"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "main",
+            "extended_data",
+            "supplementary",
+            "graphical_abstract"
+          ]
+        },
+        "width": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "content": {
+          "enum": [
+            "data_visualization",
+            "line_art",
+            "halftone",
+            "combination",
+            "photograph"
+          ]
+        },
+        "output_format": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "pdf",
+            "eps",
+            "svg",
+            "png",
+            "jpeg",
+            "tiff",
+            null
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "findings",
+        "failures",
+        "warnings",
+        "unresolved"
+      ],
+      "properties": {
+        "findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warnings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolved": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "rule_id",
+        "outcome",
+        "level",
+        "phase",
+        "verification",
+        "message",
+        "observed",
+        "expected",
+        "source_urls",
+        "sources",
+        "artifact",
+        "suggestion"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "enum": [
+            "pass",
+            "fail",
+            "skip"
+          ]
+        },
+        "level": {
+          "enum": [
+            "required",
+            "recommended",
+            "inferred"
+          ]
+        },
+        "phase": {
+          "enum": [
+            "live",
+            "file",
+            "bundle"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "automated",
+            "manual",
+            "unsupported"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed": {},
+        "expected": {},
+        "source_urls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "sources": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/source"}
+        },
+        "artifact": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "suggestion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["id", "title", "url", "locator", "retrieved_on", "verified_on"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "pattern": "^https://"},
+        "locator": {"type": "string", "minLength": 1},
+        "retrieved_on": {"type": "string", "format": "date"},
+        "verified_on": {"type": "string", "format": "date"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

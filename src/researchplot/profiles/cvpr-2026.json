@@ -1,26 +1,248 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "id": "cvpr-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-02",
   "name": "CVPR 2026",
   "kind": "conference",
   "year": 2026,
-  "aliases": ["cvpr", "computer vision and pattern recognition", "conference on computer vision and pattern recognition"],
+  "aliases": [
+    "cvpr",
+    "computer vision and pattern recognition",
+    "conference on computer vision and pattern recognition"
+  ],
   "scope": "CVPR 2026 paper author kit.",
   "default_width": "single",
   "verified_on": "2026-08-02",
   "caveats": [],
   "sources": [
-    {"id": "cvpr-guidelines", "title": "CVPR 2026 Author Guidelines", "url": "https://cvpr.thecvf.com/Conferences/2026/AuthorGuidelines", "verified_on": "2026-08-02"},
-    {"id": "cvpr-kit", "title": "CVPR 2026 Author Kit", "url": "https://github.com/cvpr-org/author-kit/releases/tag/CVPR2026-v1%28latex%29", "verified_on": "2026-08-02"}
+    {
+      "id": "cvpr-guidelines",
+      "title": "CVPR 2026 Author Guidelines",
+      "url": "https://cvpr.thecvf.com/Conferences/2026/AuthorGuidelines",
+      "locator": "Author guidelines: paper formatting",
+      "retrieved_on": "2026-08-02",
+      "verified_on": "2026-08-02"
+    },
+    {
+      "id": "cvpr-kit",
+      "title": "CVPR 2026 Author Kit",
+      "url": "https://github.com/cvpr-org/author-kit/releases/tag/CVPR2026-v1%28latex%29",
+      "locator": "CVPR 2026 LaTeX author kit: cvpr.sty",
+      "retrieved_on": "2026-08-02",
+      "verified_on": "2026-08-02"
+    }
   ],
   "rules": [
-    {"id": "figure.width.single", "value": 83.34375, "unit": "mm", "level": "required", "source_ids": ["cvpr-kit"], "description": "CVPR single-column width derived from the official author kit."},
-    {"id": "figure.width.double", "value": 174.625, "unit": "mm", "level": "required", "source_ids": ["cvpr-kit"], "description": "CVPR full two-column text width."},
-    {"id": "font.family", "value": ["Times", "Times New Roman", "serif"], "unit": null, "level": "required", "source_ids": ["cvpr-kit"], "description": "Match the author kit's Times typography."},
-    {"id": "font.size.min", "value": 9.0, "unit": "pt", "level": "recommended", "source_ids": ["cvpr-kit"], "description": "Figure text should remain comparable to 9-point captions and 10-point body text."},
-    {"id": "font.size.target", "value": 10.0, "unit": "pt", "level": "recommended", "source_ids": ["cvpr-kit"], "description": "Resize figure fonts to match body text."},
-    {"id": "line.width.min", "value": 0.5, "unit": "pt", "level": "inferred", "source_ids": ["cvpr-kit"], "description": "Conservative line width that renders effectively in print."},
-    {"id": "font.pdf.type3.prohibited", "value": true, "unit": null, "level": "recommended", "source_ids": ["cvpr-kit"], "description": "Embed scalable fonts in PDF artwork."},
-    {"id": "export.formats.vector", "value": ["pdf", "eps"], "unit": null, "level": "recommended", "source_ids": ["cvpr-kit"], "description": "Use scalable vector artwork in the LaTeX paper."}
+    {
+      "id": "figure.width.single",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 83.34375,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "widths": [
+          "single"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "CVPR single-column width derived from the official author kit."
+    },
+    {
+      "id": "figure.width.double",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 174.625,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "widths": [
+          "double"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "level": "required",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "CVPR full two-column text width."
+    },
+    {
+      "id": "font.family",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Times",
+          "Times New Roman",
+          "serif"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "required",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "Match the author kit's Times typography."
+    },
+    {
+      "id": "font.size.min",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 9,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "Figure text should remain comparable to 9-point captions and 10-point body text."
+    },
+    {
+      "id": "font.size.target",
+      "probe": "font.size.max_pt",
+      "constraint": {
+        "operator": "eq",
+        "value": 10,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "Resize figure fonts to match body text."
+    },
+    {
+      "id": "line.width.min",
+      "probe": "line.width.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 0.5,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {},
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "level": "inferred",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "Conservative line width that renders effectively in print."
+    },
+    {
+      "id": "font.pdf.type3.prohibited",
+      "probe": "pdf.type3_font_count",
+      "constraint": {
+        "operator": "eq",
+        "value": 0,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "output_formats": [
+          "pdf"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "Avoid Type 3 fonts so PDF artwork remains scalable."
+    },
+    {
+      "id": "font.pdf.embedding.recommended",
+      "probe": "pdf.unembedded_font_count",
+      "constraint": {
+        "operator": "eq",
+        "value": 0,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "output_formats": [
+          "pdf"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "Embed all fonts used in PDF artwork."
+    },
+    {
+      "id": "export.formats.vector",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "pdf",
+          "eps"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "content_kinds": [
+          "data_visualization",
+          "line_art"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "level": "recommended",
+      "source_ids": [
+        "cvpr-kit"
+      ],
+      "description": "Use scalable vector artwork in the LaTeX paper."
+    }
   ]
 }

@@ -1,0 +1,172 @@
+name: ResearchPlot compliance check
+description: Audit research figures against a source-backed ResearchPlot venue profile.
+author: Devrajsinh Jhala
+
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  version:
+    description: Exact researchplot-venues release to install from PyPI.
+    required: false
+    default: "1.0.0"
+  python-version:
+    description: Python version used to run ResearchPlot.
+    required: false
+    default: "3.12"
+  config:
+    description: Project configuration path. It takes precedence when the file exists.
+    required: false
+    default: researchplot.toml
+  paths:
+    description: Newline-separated files or directories used when no configuration file exists.
+    required: false
+    default: "."
+  profile:
+    description: Venue profile coordinate for direct checks, for example nature@2026.08.0.
+    required: false
+    default: ""
+  width:
+    description: Optional venue width name; omit it to use the profile default.
+    required: false
+    default: ""
+  role:
+    description: Figure role used for direct checks.
+    required: false
+    default: main
+  content:
+    description: Content kind used for direct checks.
+    required: false
+    default: data-visualization
+  sarif-file:
+    description: Path where the SARIF 2.1.0 report is written.
+    required: false
+    default: researchplot-results.sarif
+  upload-sarif:
+    description: Upload SARIF to GitHub code scanning. The caller must grant security-events write permission.
+    required: false
+    default: "false"
+  sarif-category:
+    description: GitHub code-scanning category for the uploaded SARIF report.
+    required: false
+    default: researchplot
+
+outputs:
+  sarif-file:
+    description: Absolute path to the generated SARIF report.
+    value: ${{ steps.check.outputs.sarif-file }}
+  exit-code:
+    description: ResearchPlot exit code (0 compliant, 1 non-compliant, 2 invalid, 3 indeterminate).
+    value: ${{ steps.check.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+
+    - name: Install ResearchPlot
+      shell: bash
+      env:
+        RESEARCHPLOT_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        python -m pip install --disable-pip-version-check \
+          "researchplot-venues==${RESEARCHPLOT_VERSION}"
+
+    - name: Audit figures
+      id: check
+      shell: bash
+      env:
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_PATHS: ${{ inputs.paths }}
+        INPUT_PROFILE: ${{ inputs.profile }}
+        INPUT_WIDTH: ${{ inputs.width }}
+        INPUT_ROLE: ${{ inputs.role }}
+        INPUT_CONTENT: ${{ inputs.content }}
+        INPUT_SARIF: ${{ inputs.sarif-file }}
+      run: |
+        set -uo pipefail
+        SARIF_PATH="$(python -c \
+          'import pathlib, sys; print(pathlib.Path(sys.argv[1]).resolve())' \
+          "$INPUT_SARIF")"
+        mkdir -p "$(dirname "$SARIF_PATH")"
+
+        status=0
+        if [[ -n "$INPUT_CONFIG" && -f "$INPUT_CONFIG" ]]; then
+          researchplot check \
+            --config "$INPUT_CONFIG" \
+            --format sarif \
+            --output "$SARIF_PATH" || status=$?
+        elif [[ -n "$INPUT_PROFILE" ]]; then
+          target_paths=()
+          while IFS= read -r target_path; do
+            if [[ -n "$target_path" ]]; then
+              target_paths+=("$target_path")
+            fi
+          done <<< "$INPUT_PATHS"
+          if [[ ${#target_paths[@]} -eq 0 ]]; then
+            target_paths=(.)
+          fi
+          command=(researchplot check "${target_paths[@]}"
+            --profile "$INPUT_PROFILE"
+            --role "$INPUT_ROLE"
+            --content "$INPUT_CONTENT"
+            --format sarif
+            --output "$SARIF_PATH")
+          if [[ -n "$INPUT_WIDTH" ]]; then
+            command+=(--width "$INPUT_WIDTH")
+          fi
+          "${command[@]}" || status=$?
+        else
+          echo "researchplot: configuration '$INPUT_CONFIG' was not found; profile is required for a direct check." >&2
+          status=2
+        fi
+
+        if [[ -f "$SARIF_PATH" ]]; then
+          sarif_created=true
+        else
+          sarif_created=false
+        fi
+        {
+          echo "sarif-file=$SARIF_PATH"
+          echo "sarif-created=$sarif_created"
+          echo "exit-code=$status"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Upload SARIF to GitHub code scanning
+      if: ${{ inputs.upload-sarif == 'true' && steps.check.outputs.sarif-created == 'true' }}
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: ${{ steps.check.outputs.sarif-file }}
+        category: ${{ inputs.sarif-category }}
+
+    - name: Enforce ResearchPlot verdict
+      if: ${{ always() }}
+      shell: bash
+      env:
+        RESEARCHPLOT_EXIT_CODE: ${{ steps.check.outputs.exit-code }}
+      run: |
+        case "$RESEARCHPLOT_EXIT_CODE" in
+          0) exit 0 ;;
+          1)
+            echo "ResearchPlot found required compliance failures." >&2
+            exit 1
+            ;;
+          2)
+            echo "ResearchPlot could not check the supplied input." >&2
+            exit 2
+            ;;
+          3)
+            echo "ResearchPlot could not establish one or more required checks." >&2
+            exit 3
+            ;;
+          *)
+            echo "ResearchPlot did not return a valid exit code." >&2
+            exit 2
+            ;;
+        esac

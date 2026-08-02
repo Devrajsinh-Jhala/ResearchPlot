@@ -1,96 +1,117 @@
-"""ResearchPlot: source-backed venue compliance for Matplotlib figures."""
+"""Source-backed venue compliance for research figures and submissions."""
 
 from __future__ import annotations
 
-from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any
 
-from .audit import audit_file
-from .export import export_figure
+from .compliance import (
+    CompliancePolicyError,
+    Finding,
+    Outcome,
+    Policy,
+    Report,
+    RuleEngine,
+    TargetContext,
+    Verdict,
+)
+from .contracts import export_manifest_schema, report_schema, submission_manifest_schema
+from .inspectors import (
+    ArtifactInspection,
+    ArtifactInspectionError,
+    ArtifactParseError,
+    UnsupportedArtifactError,
+    inspect_artifact,
+)
+from .manifest import ArtifactRecord, ExportManifest
 from .models import (
-    ArtworkType,
-    CheckResult,
-    CheckStatus,
-    ComplianceError,
+    ConstraintOperator,
+    ContentKind,
+    FigureRole,
+    OutputFormat,
+    RuleApplicability,
+    RuleConstraint,
     RuleLevel,
+    RulePhase,
     SourceRef,
-    ValidationReport,
     VenueKind,
     VenueProfile,
     VenueResolutionWarning,
     VenueRule,
+    VerificationMode,
 )
-from .registry import list_venues, resolve_venue, search_venues
-from .style import StyleContext, use
-from .validation import validate_figure
+from .project import FigureConfig, ProjectConfig, write_profile_lock
+from .registry import (
+    list_profiles,
+    load_profile,
+    profile_schema,
+    resolve_profile,
+    search_profiles,
+    validate_profile_data,
+)
+from .sarif import reports_to_sarif
+from .style import StyleContext
+from .submission import BundleResult, Submission, SubmissionItemResult
+from .target import Target, target
+from .transactional_export import ExportResult
 
 try:
     __version__ = version("researchplot-venues")
 except PackageNotFoundError:  # pragma: no cover - source tree without installation
     __version__ = "0+unknown"
 
-_LEGACY_NAMES = {
-    "PlotStyle",
-    "accuracy_vs_epoch",
-    "bar",
-    "boxplot",
-    "confusion_matrix",
-    "contour_plot",
-    "dendrogram",
-    "error_band",
-    "heatmap",
-    "hexbin",
-    "histogram",
-    "learning_curves",
-    "line",
-    "loss_vs_epoch",
-    "pairplot",
-    "pie",
-    "precision_recall_curve",
-    "quiver",
-    "radar_chart",
-    "roc_curve",
-    "sankey",
-    "scatter",
-    "stacked_bar",
-    "surface_3d",
-    "time_series",
-    "violinplot",
-}
-
-
-def __getattr__(name: str) -> Any:
-    """Load deprecated plotting helpers only when they are requested."""
-
-    if name in _LEGACY_NAMES:
-        return getattr(import_module(".plots", __name__), name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
-def __dir__() -> list[str]:
-    return sorted(set(globals()) | _LEGACY_NAMES)
-
+# The concise public spelling does not discard the explicit model name.
+Profile = VenueProfile
 
 __all__ = [
-    "ArtworkType",
-    "CheckResult",
-    "CheckStatus",
-    "ComplianceError",
+    "ArtifactInspection",
+    "ArtifactInspectionError",
+    "ArtifactParseError",
+    "ArtifactRecord",
+    "BundleResult",
+    "CompliancePolicyError",
+    "ConstraintOperator",
+    "ContentKind",
+    "ExportManifest",
+    "ExportResult",
+    "FigureConfig",
+    "FigureRole",
+    "Finding",
+    "Outcome",
+    "OutputFormat",
+    "Policy",
+    "Profile",
+    "ProjectConfig",
+    "Report",
+    "RuleApplicability",
+    "RuleConstraint",
+    "RuleEngine",
     "RuleLevel",
+    "RulePhase",
     "SourceRef",
     "StyleContext",
-    "ValidationReport",
+    "Submission",
+    "SubmissionItemResult",
+    "Target",
+    "TargetContext",
+    "UnsupportedArtifactError",
     "VenueKind",
     "VenueProfile",
     "VenueResolutionWarning",
     "VenueRule",
-    "audit_file",
-    "export_figure",
-    "list_venues",
-    "resolve_venue",
-    "search_venues",
-    "use",
-    "validate_figure",
-    *_LEGACY_NAMES,
+    "Verdict",
+    "VerificationMode",
+    "__version__",
+    "export_manifest_schema",
+    "inspect_artifact",
+    "list_profiles",
+    "load_profile",
+    "profile_schema",
+    "reports_to_sarif",
+    "report_schema",
+    "resolve_profile",
+    "search_profiles",
+    "submission_manifest_schema",
+    "target",
+    "validate_profile_data",
+    "write_profile_lock",
 ]
