@@ -9,6 +9,10 @@ Matplotlib figures.**
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://devrajsinh-jhala.github.io/ResearchPlot/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/LICENSE)
 
+[PyPI package](https://pypi.org/project/researchplot-venues/) ·
+[Documentation website](https://devrajsinh-jhala.github.io/ResearchPlot/) ·
+[Latest release](https://github.com/Devrajsinh-Jhala/ResearchPlot/releases/latest)
+
 ResearchPlot turns a venue name into a reproducible figure target. It styles a
 Matplotlib figure at the requested physical width, evaluates source-backed rules,
 exports transactionally, audits the files that were actually written, and can assemble a
