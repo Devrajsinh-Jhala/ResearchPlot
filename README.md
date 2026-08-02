@@ -3,7 +3,7 @@
 **Source-backed venue compliance, artifact auditing, and submission bundles for
 Matplotlib figures.**
 
-[![PyPI](https://img.shields.io/pypi/v/researchplot-venues.svg)](https://pypi.org/project/researchplot-venues/)
+[![PyPI](https://img.shields.io/pypi/v/researchplot-venues.svg?cacheSeconds=300)](https://pypi.org/project/researchplot-venues/)
 [![Python](https://img.shields.io/pypi/pyversions/researchplot-venues.svg)](https://pypi.org/project/researchplot-venues/)
 [![CI](https://github.com/Devrajsinh-Jhala/ResearchPlot/actions/workflows/ci.yml/badge.svg)](https://github.com/Devrajsinh-Jhala/ResearchPlot/actions/workflows/ci.yml)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://devrajsinh-jhala.github.io/ResearchPlot/)
