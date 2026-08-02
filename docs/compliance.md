@@ -87,9 +87,7 @@ an automated observation:
 ```python
 report = target.validate(
     fig,
-    attestations={
-        "panels.order.logical": "Panels are ordered left-to-right, then top-to-bottom."
-    },
+    attestations={"panels.order.logical": "Panels are ordered left-to-right, then top-to-bottom."},
 )
 ```
 
