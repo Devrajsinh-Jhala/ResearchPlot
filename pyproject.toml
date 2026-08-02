@@ -119,5 +119,23 @@ mypy_path = "src"
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["matplotlib.*", "PIL.*", "pypdf.*", "scipy.*", "seaborn.*", "sklearn.*"]
+module = [
+  "matplotlib",
+  "matplotlib.*",
+  "numpy",
+  "numpy.*",
+  "pandas",
+  "pandas.*",
+  "PIL",
+  "PIL.*",
+  "pypdf",
+  "pypdf.*",
+  "scipy",
+  "scipy.*",
+  "seaborn",
+  "seaborn.*",
+  "sklearn",
+  "sklearn.*",
+]
+follow_imports = "skip"
 ignore_missing_imports = true

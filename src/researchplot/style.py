@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager
 from pathlib import Path
 from types import TracebackType
-from typing import Any
+from typing import Any, cast
 
 import matplotlib as mpl
 from matplotlib import font_manager
@@ -156,7 +156,7 @@ class StyleContext(AbstractContextManager["StyleContext"]):
         if height_mm <= 0:
             raise ValueError("Figure height must be greater than zero.")
         kwargs.setdefault("figsize", (self.width_mm / 25.4, height_mm / 25.4))
-        return plt.subplots(*args, **kwargs)
+        return cast(tuple[Figure, Any], plt.subplots(*args, **kwargs))
 
     def validate(
         self,
