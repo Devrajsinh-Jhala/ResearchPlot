@@ -27,7 +27,7 @@ def _require(module: str, feature: str) -> Any:
     except ImportError as exc:
         raise ImportError(
             f"{feature} requires optional plotting dependencies. "
-            "Install them with: pip install 'researchplot[plots]'"
+            "Install them with: pip install 'researchplot-venues[plots]'"
         ) from exc
 
 

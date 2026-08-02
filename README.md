@@ -4,20 +4,23 @@ ResearchPlot creates Matplotlib figures at verified publication widths, explains
 where each venue rule came from, validates live figures, and audits exported files.
 It is a compliance assistant—not a guarantee that a publisher will accept a figure.
 
-[![PyPI](https://img.shields.io/pypi/v/researchplot.svg)](https://pypi.org/project/researchplot/)
+[![PyPI](https://img.shields.io/pypi/v/researchplot-venues.svg)](https://pypi.org/project/researchplot-venues/)
 [![CI](https://github.com/Devrajsinh-Jhala/ResearchPlot/actions/workflows/ci.yml/badge.svg)](https://github.com/Devrajsinh-Jhala/ResearchPlot/actions/workflows/ci.yml)
 
 ## Installation
 
 ```bash
-python -m pip install researchplot
+python -m pip install researchplot-venues
 ```
+
+The PyPI distribution is named `researchplot-venues`; the Python package and CLI
+remain `researchplot`, so existing imports and commands do not change.
 
 The core requires Python 3.10+ and does not require LaTeX or network access. Install
 the deprecated high-level plotting helpers separately:
 
 ```bash
-python -m pip install "researchplot[plots]"
+python -m pip install "researchplot-venues[plots]"
 ```
 
 ## Venue-native workflow

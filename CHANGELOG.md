@@ -16,7 +16,7 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 ### Changed
 
 - Optional Seaborn, pandas, scikit-learn, SciPy, and NumPy integrations now live in
-  `researchplot[plots]`.
+  `researchplot-venues[plots]`.
 - Legacy plotting functions return figures/axes and emit deprecation warnings.
 
 ### Fixed

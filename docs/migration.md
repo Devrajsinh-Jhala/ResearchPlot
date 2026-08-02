@@ -2,7 +2,7 @@
 
 The `0.1` functions still work in `0.2.x`, show figures by default, and accept their
 original positional arguments. They now return `(fig, ax)` and accept `ax=` and
-`show=` keyword arguments. Install them with `researchplot[plots]`.
+`show=` keyword arguments. Install them with `researchplot-venues[plots]`.
 
 ```python
 # 0.1 compatibility

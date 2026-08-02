@@ -3,7 +3,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "researchplot"
+name = "researchplot-venues"
 version = "0.2.0"
 description = "Source-backed venue styling, validation, and export for research figures."
 readme = "README.md"

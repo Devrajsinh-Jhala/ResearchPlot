@@ -4,6 +4,21 @@ ResearchPlot is an offline, source-backed compliance layer for Matplotlib. It re
 human venue names, creates figures at exact final dimensions, validates live artists,
 exports allowed formats, and audits output metadata.
 
+## Installation
+
+```bash
+python -m pip install researchplot-venues
+```
+
+Install deprecated high-level plotting helpers with:
+
+```bash
+python -m pip install "researchplot-venues[plots]"
+```
+
+The distribution name is `researchplot-venues`; imports and the command-line program
+remain named `researchplot`.
+
 ```python
 import researchplot as rp
 
