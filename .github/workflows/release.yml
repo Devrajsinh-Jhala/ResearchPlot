@@ -16,7 +16,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Require a verifiable signed tag
@@ -25,7 +25,7 @@ jobs:
         run: |
           tag_sha="$(git rev-parse "$GITHUB_REF_NAME^{tag}")"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha" --jq .verification.verified)" = true
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
