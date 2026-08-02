@@ -47,9 +47,9 @@ names raise an error with suggestions; they never silently become IEEE.
 
 ```python
 profile = rp.resolve_venue("Nature")
-print(profile.width_options)       # ('single', 'double')
-print(profile.width_mm("single")) # 89.0
-print(profile.sources)             # official guidance and verification dates
+print(profile.width_options)  # ('single', 'double')
+print(profile.width_mm("single"))  # 89.0
+print(profile.sources)  # official guidance and verification dates
 ```
 
 ## Verified catalog
