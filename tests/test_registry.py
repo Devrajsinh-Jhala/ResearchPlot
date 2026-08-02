@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from datetime import date
+from importlib.metadata import version
 from importlib.resources import files
 
 import pytest
@@ -24,6 +25,10 @@ EXPECTED_WIDTHS = {
     "cvpr-2026": {"single": 83.34375, "double": 174.625},
     "acl-2026": {"single": 77.0, "double": 160.0},
 }
+
+
+def test_version_matches_distribution_metadata() -> None:
+    assert rp.__version__ == version("researchplot-venues")
 
 
 def test_catalog_has_only_verified_initial_profiles() -> None:

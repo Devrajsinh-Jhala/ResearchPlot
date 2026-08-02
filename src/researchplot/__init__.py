@@ -26,7 +26,7 @@ from .style import StyleContext, use
 from .validation import validate_figure
 
 try:
-    __version__ = version("researchplot")
+    __version__ = version("researchplot-venues")
 except PackageNotFoundError:  # pragma: no cover - source tree without installation
     __version__ = "0+unknown"
 

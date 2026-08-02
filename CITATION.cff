@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: "Jhala"
     given-names: "Devrajsinh"
-version: 0.2.0
+version: 0.2.1
 date-released: 2026-08-02
 url: "https://github.com/Devrajsinh-Jhala/ResearchPlot"
 repository-code: "https://github.com/Devrajsinh-Jhala/ResearchPlot"

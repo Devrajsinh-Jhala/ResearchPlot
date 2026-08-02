@@ -3,6 +3,13 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-08-02
+
+### Fixed
+
+- Resolve `researchplot.__version__` from the renamed `researchplot-venues`
+  distribution metadata.
+
 ## [0.2.0] - 2026-08-02
 
 ### Added
@@ -28,4 +35,5 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   function metadata, and composable return values.
 - Removed generated build products, metadata, bytecode, and figures from source.
 
+[0.2.1]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.1.0...v0.2.0
