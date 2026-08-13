@@ -3,6 +3,12 @@ name: Publish signed release
 on:
   push:
     tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing signed release tag to recover or republish
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -10,8 +16,10 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     environment:
-      name: ${{ contains(github.ref_name, 'rc') && 'testpypi' || 'pypi' }}
+      name: ${{ contains(inputs.release_tag || github.ref_name, 'rc') && 'testpypi' || 'pypi' }}
     permissions:
       attestations: write
       contents: write
@@ -20,11 +28,15 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
       - name: Require a verifiable signed tag
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag_sha="$(git rev-parse "$GITHUB_REF_NAME^{tag}")"
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?$ ]]
+          test "$(git cat-file -t "$RELEASE_TAG")" = tag
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
+          tag_sha="$(git rev-parse "$RELEASE_TAG^{tag}")"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha" --jq .verification.verified)" = true
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
@@ -47,17 +59,19 @@ jobs:
           python - <<'PY'
           import os, pathlib, tomllib
           project = tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]
-          expected = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          expected = os.environ["RELEASE_TAG"].removeprefix("v")
           assert project["version"] == expected, (project["version"], expected)
           PY
       - run: python -m build
       - run: python -m twine check dist/*
+      - name: Prepare release assets
+        run: mkdir -p release-assets
       - name: Generate release SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           path: dist
           format: cyclonedx-json
-          output-file: release-assets/researchplot-${{ github.ref_name }}.cdx.json
+          output-file: release-assets/researchplot-${{ env.RELEASE_TAG }}.cdx.json
           upload-artifact: false
       - name: Attest release distributions
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
@@ -70,19 +84,19 @@ jobs:
           /tmp/researchplot-release/bin/researchplot profile list
           /tmp/researchplot-release/bin/researchplot doctor --profile nature@2026.08.0 --json
       - name: Publish release candidate to TestPyPI
-        if: contains(github.ref_name, 'rc')
+        if: contains(env.RELEASE_TAG, 'rc')
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
       - name: Publish final release to PyPI
-        if: ${{ !contains(github.ref_name, 'rc') }}
+        if: ${{ !contains(env.RELEASE_TAG, 'rc') }}
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
       - name: Create GitHub release with verified distributions
-        if: ${{ !contains(github.ref_name, 'rc') }}
+        if: ${{ !contains(env.RELEASE_TAG, 'rc') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* release-assets/* \
+          gh release create "$RELEASE_TAG" dist/* release-assets/* \
             --verify-tag \
-            --title "ResearchPlot ${GITHUB_REF_NAME#v}" \
+            --title "ResearchPlot ${RELEASE_TAG#v}" \
             --generate-notes
