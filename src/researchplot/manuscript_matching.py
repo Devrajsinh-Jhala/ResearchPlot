@@ -9,6 +9,7 @@ evidence identifies exactly one measurable placed object.
 from __future__ import annotations
 
 import hashlib
+import importlib
 import math
 import re
 import unicodedata
@@ -407,9 +408,11 @@ def _embedded_image_fingerprint(
     try:
         # pypdf exposes decoded PIL images on PageObject.images but not for a specific
         # nested invocation.  Its internal decoder is used only after strict pixel caps.
-        from pypdf._xobj_image_helpers import _xobj_to_image
-
-        decoded = _xobj_to_image(value)[2]
+        try:
+            decoder_module = importlib.import_module("pypdf.generic._image_xobject")
+        except ModuleNotFoundError:
+            decoder_module = importlib.import_module("pypdf._xobj_image_helpers")
+        decoded = decoder_module._xobj_to_image(value)[2]
         fingerprint = _image_fingerprint(decoded)
     except Exception:  # Unsupported filters/colorspaces become unavailable evidence.
         fingerprint = None
