@@ -44,7 +44,7 @@ dependencies = [
 
 [project.optional-dependencies]
 plots = [
-  "numpy>=1.24",
+  "numpy>=2.4.6",
   "pandas>=1.5",
   "scikit-learn>=1.2",
   "scipy>=1.10",
@@ -73,7 +73,7 @@ web = []
 accessibility = []
 manuscript = []
 all = [
-  "numpy>=1.24",
+  "numpy>=2.4.6",
   "pandas>=1.5",
   "scikit-learn>=1.2",
   "scipy>=1.10",
