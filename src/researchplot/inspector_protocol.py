@@ -536,6 +536,26 @@ def _constant_digest_match(observed: str, expected: str) -> bool:
     return hmac.compare_digest(observed, expected)
 
 
+def _set_resource_limit(
+    resource_module: Any,
+    resource_kind: int,
+    soft_limit: int,
+    hard_limit: int,
+) -> None:
+    """Apply one POSIX limit without making an unsupported limit fatal."""
+    try:
+        _, current_hard = resource_module.getrlimit(resource_kind)
+        infinity = resource_module.RLIM_INFINITY
+        selected_hard = hard_limit if current_hard == infinity else min(hard_limit, current_hard)
+        selected_soft = min(soft_limit, selected_hard)
+        resource_module.setrlimit(resource_kind, (selected_soft, selected_hard))
+    except (OSError, ValueError):
+        # Darwin exposes RLIMIT_AS but rejects it for some hosted processes.
+        # Parent-enforced wall-clock and output budgets remain active, while
+        # every other supported POSIX limit is still applied independently.
+        return
+
+
 def _resource_limiter(limits: InspectorLimits) -> Any:
     if os.name != "posix":
         return None
@@ -548,20 +568,26 @@ def _resource_limiter(limits: InspectorLimits) -> Any:
     output_limit = max(limits.max_response_bytes, limits.max_stderr_bytes) + 4096
 
     def apply_limits() -> None:
-        resource_module.setrlimit(
+        _set_resource_limit(
+            resource_module,
             resource_module.RLIMIT_AS,
-            (limits.max_memory_bytes, limits.max_memory_bytes),
+            limits.max_memory_bytes,
+            limits.max_memory_bytes,
         )
-        resource_module.setrlimit(
+        _set_resource_limit(
+            resource_module,
             resource_module.RLIMIT_CPU,
-            (limits.max_cpu_seconds, limits.max_cpu_seconds + 1),
+            limits.max_cpu_seconds,
+            limits.max_cpu_seconds + 1,
         )
-        resource_module.setrlimit(
+        _set_resource_limit(
+            resource_module,
             resource_module.RLIMIT_FSIZE,
-            (output_limit, output_limit),
+            output_limit,
+            output_limit,
         )
         if hasattr(resource_module, "RLIMIT_NOFILE"):
-            resource_module.setrlimit(resource_module.RLIMIT_NOFILE, (64, 64))
+            _set_resource_limit(resource_module, resource_module.RLIMIT_NOFILE, 64, 64)
 
     return apply_limits
 

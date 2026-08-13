@@ -22,6 +22,7 @@ from researchplot.inspector_protocol import (
     InspectorResourceError,
     InspectorResponseError,
     InspectorTimeoutError,
+    _set_resource_limit,
 )
 
 _SUCCESS_PLUGIN = r"""
@@ -248,6 +249,21 @@ def test_protocol_constant_and_configuration_validation(tmp_path: Path) -> None:
         InspectorAllowlist((entry, entry))
     with pytest.raises(ValueError, match="64 hexadecimal"):
         InspectorFilePin((tmp_path / "missing").resolve(), "not-a-digest")
+
+
+def test_unsupported_posix_resource_limit_is_best_effort() -> None:
+    class UnsupportedLimit:
+        RLIM_INFINITY = -1
+
+        @staticmethod
+        def getrlimit(_kind: int) -> tuple[int, int]:
+            return (-1, -1)
+
+        @staticmethod
+        def setrlimit(_kind: int, _limits: tuple[int, int]) -> None:
+            raise ValueError("unsupported by this POSIX host")
+
+    _set_resource_limit(UnsupportedLimit(), 1, 64, 64)
 
 
 def test_options_must_be_bounded_json(tmp_path: Path) -> None:
