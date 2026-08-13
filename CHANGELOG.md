@@ -3,6 +3,105 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] - 2026-08-13
+
+### Added
+
+- Strict schema-v3 `ProjectSpec`, `FigureSpec`, `PanelSpec`, `DeliverableSpec`, and
+  `ManuscriptSpec` models with stable IDs, explicit deliverables, descriptions, panels,
+  source-data references, typed manual attestations, digest/expiry-bound waivers, and a
+  bundled project JSON Schema.
+- Coverage-aware `CompliancePlan` and `PlanAssessment` results. A project becomes
+  `COMPLIANT` only when every applicable encoded required rule is covered and passes;
+  missing required evidence produces `INDETERMINATE`.
+- Explicit `ExportPlan` separation between allowed formats, selected/preferred formats,
+  required companions, and format-specific settings.
+- Profile schema v3 with typed probes, closed unit conversion, declarative comparison
+  expressions, `all`/`any`/`not` composition, governance/status metadata, deterministic
+  composition, source fingerprints, and schema-v2 translation.
+- Deterministic profile locks plus an opt-in fail-closed TUF registry client requiring
+  an explicit base URL, trusted root, and cache. Normal operations remain offline.
+- Deeper passive PDF, SVG, raster, and EPS observations, including active-content
+  indicators, PDF resources, SVG scripting/external references, raster EXIF/ICC/frame
+  metadata, and format/content mismatches.
+- Bounded subprocess artifact inspection, manifest/path/hash verification, and
+  deterministic ZIP/TAR creation and verification with stable members, timestamps,
+  ownership, permissions, and `SOURCE_DATE_EPOCH` support.
+- Stable transactional PDF/SVG metadata and profile-derived SVG identifier salts for
+  reproducible vector exports under a fixed dependency environment.
+- Deterministic grayscale, protanopia, deuteranopia, and tritanopia previews plus
+  confidence-labeled advisory luminance, entropy, transparency, rendered clipping,
+  label-overlap, whitespace, point-size, and colormap-luminance diagnostics.
+- Compiled-manuscript PDF structure and conservative placement auditing via embedded
+  provenance IDs, exact raster fingerprints, or unique configured hints, with measured
+  bounds, rotation, effective DPI/source scale, and crop-box clipping.
+- Deterministic remediation plans, self-contained offline HTML reports, JATS 1.4 figure
+  metadata, and RO-Crate 1.3 metadata projections.
+- Loopback-only local browser workspace with per-launch tokens, origin checks, upload
+  limits, a restrictive content-security policy, temporary-file cleanup, local raster
+  previews, JSON download, and reproducible CLI commands.
+- CLI commands for project initialization/migration, direct artifact audit, frozen
+  checks, HTML output, profile status/verify/sync, bundle verify/archive/JATS/RO-Crate,
+  structural manuscript checks, read-only remediation planning, retarget planning,
+  local serving, and capability diagnostics.
+- A 22-profile source-backed launch catalog across journals, conferences, and
+  generic/narrow publisher guidance, with evidence metadata and page-generation
+  tooling. Missing official guidance remains unspecified.
+- Dedicated security workflow, dependency updates, profile evidence generation,
+  release SBOM/provenance generation, issue/PR templates, and CODEOWNERS metadata.
+
+### Changed
+
+- Make the project graph and its explicit evidence coverage the primary API while
+  retaining phase-local `Target` operations.
+- Require exact profile coordinates in schema-v3 projects and verify locks before
+  frozen inspection.
+- Emit a published aggregate report schema version 2 from `PlanAssessment.to_dict()`,
+  including a plan digest, sources, coverage, capability gaps, remediations, and
+  privacy-safe environment provenance.
+- Treat external file-only passes as phase-limited evidence instead of project-wide
+  compliance.
+- Build project bundles as verified directories; deterministic ZIP or TAR creation is a
+  separate explicit step.
+- Make the public website and documentation artifact-audit-first and document
+  security, offline behavior, interoperability, migration, and current capability
+  limits alongside every workflow.
+- Require Python 3.11 or newer. LaTeX, web, registry, manuscript fallback, legacy plot
+  integrations, and network access remain optional.
+
+### Deprecated
+
+- `Target`, `target()`, v1 project/report/manifest surfaces, legacy CLI aliases, and the
+  high-level plotting wrappers remain available throughout 2.x but are compatibility
+  bridges. No removal occurs before 3.0.
+- Legacy plotting helpers load lazily and require `researchplot-venues[plots]`; new
+  authoring should use native Matplotlib inside a `FigureTarget.style()` context.
+
+### Security
+
+- Keep profile sync as the only intended network operation and fail closed when trust
+  material or TUF capability is unavailable.
+- Reject unsafe bundle/archive member paths, symlinks, non-regular members, case
+  collisions, digest mismatch, and unbounded manifest structures.
+- Add bounded isolated parsing for untrusted artifacts and report active PDF/SVG content
+  without executing it.
+- Harden local web processing to loopback-only sessions with request tokens, origin
+  checks, upload limits, redacted temporary paths, and no telemetry.
+- Use exclusive or atomic same-directory writes for new v2 report/configuration paths
+  where implemented.
+
+### Known limitations
+
+- Manuscript matching does not canonicalize standalone vector objects, reconcile all
+  captions/references, or evaluate venue-specific manuscript rules; the command remains
+  indeterminate (exit code `3`) even when every configured placement is measured.
+- `Project.bundle()` uses the v1 submission-manifest bridge and rejects generic
+  attachments or multiple source-data files rather than losing their semantics.
+- Byte-for-byte archive and vector-export reproducibility still depends on a fixed
+  ResearchPlot, Matplotlib, font, and backend environment.
+- Semantic object contrast, color-only encoding, panel alignment, and cryptographic
+  provenance signing for reviewer attestations are not yet implemented.
+
 ## [1.0.0] - 2026-08-02
 
 ### Added
@@ -100,6 +199,7 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
   function metadata, and composable return values.
 - Removed generated build products, metadata, bytecode, and figures from source.
 
+[2.0.0]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.2.1...v1.0.0
 [0.2.1]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Devrajsinh-Jhala/ResearchPlot/compare/v0.1.0...v0.2.0

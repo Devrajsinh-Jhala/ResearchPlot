@@ -1,0 +1,135 @@
+{
+  "schema_version": 3,
+  "id": "jmlr",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "Journal of Machine Learning Research",
+  "kind": "journal",
+  "year": null,
+  "aliases": [
+    "journal of machine learning research"
+  ],
+  "scope": "JMLR article figures under the official final format.",
+  "default_width": "full",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The width is the full text block; JMLR does not define alternative named figure widths."
+  ],
+  "sources": [
+    {
+      "id": "jmlr-format",
+      "title": "JMLR Instructions for Formatting Articles",
+      "url": "https://jmlr.org/format/format.html",
+      "locator": "Single-column geometry and figure typography",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_guideline",
+      "publisher": "JMLR Instructions for Formatting Articles",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.full",
+      "level": "inferred",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 152.4,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "jmlr-format"
+      ],
+      "description": "The official single-column text width is 6 inches.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "The full-width target is the official style-file text width."
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "inferred",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 215.9,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "jmlr-format"
+      ],
+      "description": "Figures must fit within the 8.5-inch text block.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.minimum",
+      "level": "required",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 9,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "jmlr-format"
+      ],
+      "description": "Captions, labels, and illustration text must be at least 9 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, cast
 
 
-@lru_cache(maxsize=3)
+@lru_cache(maxsize=4)
 def _load_contract(name: str) -> dict[str, Any]:
     resource = files("researchplot").joinpath("schemas", name)
     try:
@@ -31,6 +31,12 @@ def report_schema() -> dict[str, Any]:
     """Return an independent copy of the compliance-report JSON Schema."""
 
     return copy.deepcopy(_load_contract("report.schema.json"))
+
+
+def validation_report_schema() -> dict[str, Any]:
+    """Return an independent copy of the coverage-aware v2 report schema."""
+
+    return copy.deepcopy(_load_contract("validation-report.schema.json"))
 
 
 def export_manifest_schema() -> dict[str, Any]:

@@ -29,8 +29,11 @@ _MAX_PDF_PAGES = 10_000
 _MAX_PDF_RESOURCE_OBJECTS = 50_000
 _MAX_PDF_FONTS = 10_000
 _MAX_PDF_RECURSION = 64
+_MAX_PDF_NAME_TREE_ENTRIES = 10_000
 _MAX_RASTER_PIXELS = 100_000_000
 _MAX_RASTER_DIMENSION = 100_000
+_MAX_RASTER_FRAMES = 1_024
+_MAX_RASTER_TOTAL_FRAME_PIXELS = 200_000_000
 _EPS_SCAN_BYTES = 1024 * 1024
 
 _MIME_TYPES = {
@@ -64,6 +67,7 @@ _SVG_LENGTH = re.compile(
 )
 _CSS_FONT_FAMILY = re.compile(r"(?:^|[;{])\s*font-family\s*:\s*([^;}]+)", re.IGNORECASE)
 _CSS_URL = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE)
+_CSS_ACTIVE = re.compile(r"(?:@import\b|expression\s*\(|javascript\s*:)", re.IGNORECASE)
 _NUMBER = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
 _EPS_BOX = re.compile(
     rf"^%%(?P<kind>HiResBoundingBox|BoundingBox):\s*"
@@ -290,6 +294,21 @@ def _font_has_unembedded_truetype(font: Any, subtype: str) -> bool:
         return False
 
 
+def _pdf_color_space_name(value: Any) -> str:
+    """Return a bounded, human-readable PDF colour-space description."""
+
+    resolved = _resolve_pdf(value)
+    if isinstance(resolved, (str, bytes)):
+        return str(resolved)
+    try:
+        if isinstance(resolved, Iterable):
+            items = list(resolved)[:4]
+            return "[" + ", ".join(str(_resolve_pdf(item)) for item in items) + "]"
+    except (TypeError, ValueError):
+        pass
+    return str(resolved)
+
+
 def _inspect_pdf(path: Path, observations: list[Observation]) -> tuple[str, ...]:
     try:
         reader = PdfReader(path, strict=False)
@@ -319,6 +338,99 @@ def _inspect_pdf(path: Path, observations: list[Observation]) -> tuple[str, ...]
     fonts: dict[tuple[str, int, int], _FontFinding] = {}
     font_resource_occurrences = 0
     seen_resources: set[tuple[str, int, int]] = set()
+    seen_xobjects: set[tuple[str, int, int]] = set()
+    image_xobject_count = 0
+    form_xobject_count = 0
+    other_xobject_count = 0
+    image_color_spaces: set[str] = set()
+    image_xobject_details: list[
+        tuple[str, float | None, float | None, float | None, str | None]
+    ] = []
+    resource_color_spaces: set[str] = set()
+    transparency_reasons: set[str] = set()
+    active_content_types: set[str] = set()
+    external_uris: set[str] = set()
+    embedded_file_count = 0
+    action_objects_seen: set[tuple[str, int, int]] = set()
+
+    def count_name_tree(node_ref: Any, depth: int = 0) -> int:
+        if depth > _MAX_PDF_RECURSION:
+            raise ArtifactParseError(
+                f"Refusing to inspect PDF {path}: name-tree nesting exceeds "
+                f"{_MAX_PDF_RECURSION} levels."
+            )
+        node = _resolve_pdf(node_ref)
+        if not hasattr(node, "get"):
+            return 0
+        names_ref = node.get("/Names")
+        count = 0
+        if names_ref is not None:
+            names = _resolve_pdf(names_ref)
+            try:
+                count += len(names) // 2
+            except TypeError as exc:
+                raise ArtifactParseError(f"PDF name tree is malformed: {exc}") from exc
+            if count > _MAX_PDF_NAME_TREE_ENTRIES:
+                raise ArtifactParseError(
+                    f"Refusing to inspect PDF {path}: a name tree exceeds "
+                    f"{_MAX_PDF_NAME_TREE_ENTRIES} entries."
+                )
+        kids_ref = node.get("/Kids")
+        if kids_ref is not None:
+            kids = _resolve_pdf(kids_ref)
+            try:
+                for kid in kids:
+                    count += count_name_tree(kid, depth + 1)
+                    if count > _MAX_PDF_NAME_TREE_ENTRIES:
+                        raise ArtifactParseError(
+                            f"Refusing to inspect PDF {path}: a name tree exceeds "
+                            f"{_MAX_PDF_NAME_TREE_ENTRIES} entries."
+                        )
+            except ArtifactInspectionError:
+                raise
+            except TypeError as exc:
+                raise ArtifactParseError(f"PDF name tree is malformed: {exc}") from exc
+        return count
+
+    def record_actions(value_ref: Any, depth: int = 0) -> None:
+        """Record action dictionaries without decoding or executing their payloads."""
+
+        if value_ref is None:
+            return
+        if depth > _MAX_PDF_RECURSION:
+            raise ArtifactParseError(
+                f"Refusing to inspect PDF {path}: action nesting exceeds "
+                f"{_MAX_PDF_RECURSION} levels."
+            )
+        value = _resolve_pdf(value_ref)
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                record_actions(item, depth + 1)
+            return
+        if not hasattr(value, "get"):
+            return
+        key = _object_key(value_ref, value)
+        if key in action_objects_seen:
+            return
+        if len(action_objects_seen) >= _MAX_PDF_RESOURCE_OBJECTS:
+            raise ArtifactParseError(
+                f"Refusing to inspect PDF {path}: more than {_MAX_PDF_RESOURCE_OBJECTS} "
+                "action dictionaries were discovered."
+            )
+        action_objects_seen.add(key)
+        action_type = str(value.get("/S", "")).lstrip("/")
+        if action_type:
+            active_content_types.add(action_type)
+        uri = value.get("/URI")
+        if uri is not None and len(external_uris) < _MAX_PDF_NAME_TREE_ENTRIES:
+            external_uris.add(str(_resolve_pdf(uri))[:2_048])
+        for nested_key in ("/Next", "/A", "/AA", "/OpenAction"):
+            nested = value.get(nested_key)
+            if nested is not None:
+                record_actions(nested, depth + 1)
+        if not action_type:
+            for nested in value.values():
+                record_actions(nested, depth + 1)
 
     def record_font(font_ref: Any, resource_name: object, location: str, depth: int) -> None:
         nonlocal font_resource_occurrences
@@ -356,11 +468,52 @@ def _inspect_pdf(path: Path, observations: list[Observation]) -> tuple[str, ...]
                 f"Could not inspect PDF font resource {resource_name!s} at {location}: {exc}"
             ) from exc
 
-    def inspect_container(container_ref: Any, location: str, depth: int) -> None:
+    def inspect_container(
+        container_ref: Any, location: str, depth: int, container_name: str
+    ) -> None:
+        nonlocal image_xobject_count, form_xobject_count, other_xobject_count
         container = _resolve_pdf(container_ref)
         try:
             for name, child_ref in container.items():
                 child = _resolve_pdf(child_ref)
+                if container_name == "/XObject":
+                    child_key = _object_key(child_ref, child)
+                    if child_key not in seen_xobjects:
+                        seen_xobjects.add(child_key)
+                        subtype = str(child.get("/Subtype", "")) if hasattr(child, "get") else ""
+                        if subtype == "/Image":
+                            image_xobject_count += 1
+                            color_space = child.get("/ColorSpace")
+                            color_space_name = (
+                                _pdf_color_space_name(color_space)
+                                if color_space is not None
+                                else None
+                            )
+                            if color_space is not None:
+                                image_color_spaces.add(color_space_name or "unknown")
+                            image_xobject_details.append(
+                                (
+                                    f"{location}/{name!s}",
+                                    _finite_float(child.get("/Width")),
+                                    _finite_float(child.get("/Height")),
+                                    _finite_float(child.get("/BitsPerComponent")),
+                                    color_space_name,
+                                )
+                            )
+                            if child.get("/SMask") is not None:
+                                transparency_reasons.add("image-soft-mask")
+                            if child.get("/Mask") is not None:
+                                transparency_reasons.add("image-mask")
+                        elif subtype == "/Form":
+                            form_xobject_count += 1
+                            group = _resolve_pdf(child.get("/Group"))
+                            if (
+                                hasattr(group, "get")
+                                and str(group.get("/S", "")) == "/Transparency"
+                            ):
+                                transparency_reasons.add("transparency-group")
+                        else:
+                            other_xobject_count += 1
                 nested = child.get("/Resources") if hasattr(child, "get") else None
                 if nested is not None:
                     inspect_resources(nested, f"{location}/{name!s}", depth + 1)
@@ -403,10 +556,48 @@ def _inspect_pdf(path: Path, observations: list[Observation]) -> tuple[str, ...]
                     f"PDF font dictionary at {location} is malformed: {exc}"
                 ) from exc
 
+        color_spaces_ref = resources.get("/ColorSpace")
+        if color_spaces_ref is not None:
+            color_spaces = _resolve_pdf(color_spaces_ref)
+            try:
+                for _, color_space_ref in color_spaces.items():
+                    resource_color_spaces.add(_pdf_color_space_name(color_space_ref))
+            except (AttributeError, TypeError) as exc:
+                raise ArtifactParseError(
+                    f"PDF colour-space dictionary at {location} is malformed: {exc}"
+                ) from exc
+
+        graphics_states_ref = resources.get("/ExtGState")
+        if graphics_states_ref is not None:
+            graphics_states = _resolve_pdf(graphics_states_ref)
+            try:
+                for _, state_ref in graphics_states.items():
+                    state = _resolve_pdf(state_ref)
+                    if not hasattr(state, "get"):
+                        continue
+                    for alpha_key, reason in (
+                        ("/ca", "non-opaque-fill"),
+                        ("/CA", "non-opaque-stroke"),
+                    ):
+                        alpha = _finite_float(state.get(alpha_key))
+                        if alpha is not None and alpha < 1.0:
+                            transparency_reasons.add(reason)
+                    if state.get("/SMask") not in (None, "/None"):
+                        transparency_reasons.add("graphics-state-soft-mask")
+                    blend_mode = state.get("/BM")
+                    if blend_mode not in (None, "/Normal", "/Compatible"):
+                        transparency_reasons.add("non-normal-blend-mode")
+            except (AttributeError, TypeError) as exc:
+                raise ArtifactParseError(
+                    f"PDF graphics-state dictionary at {location} is malformed: {exc}"
+                ) from exc
+
         for container_name in ("/XObject", "/Pattern"):
             container_ref = resources.get(container_name)
             if container_ref is not None:
-                inspect_container(container_ref, f"{location}{container_name}", depth)
+                inspect_container(
+                    container_ref, f"{location}{container_name}", depth, container_name
+                )
 
     def inspect_annotation_appearances(page: Any, page_number: int) -> None:
         annotations_ref = page.get("/Annots")
@@ -416,6 +607,11 @@ def _inspect_pdf(path: Path, observations: list[Observation]) -> tuple[str, ...]
         try:
             for annotation_index, annotation_ref in enumerate(annotations, start=1):
                 annotation = _resolve_pdf(annotation_ref)
+                subtype = str(annotation.get("/Subtype", "")).lstrip("/")
+                if subtype in {"RichMedia", "Movie", "Sound", "FileAttachment", "Screen", "3D"}:
+                    active_content_types.add(subtype)
+                record_actions(annotation.get("/A"))
+                record_actions(annotation.get("/AA"))
                 appearances_ref = annotation.get("/AP")
                 if appearances_ref is None:
                     continue
@@ -445,7 +641,28 @@ def _inspect_pdf(path: Path, observations: list[Observation]) -> tuple[str, ...]
             ) from exc
 
     try:
+        catalog = _resolve_pdf(reader.trailer.get("/Root"))
+        if hasattr(catalog, "get"):
+            record_actions(catalog.get("/OpenAction"))
+            record_actions(catalog.get("/AA"))
+            names = _resolve_pdf(catalog.get("/Names"))
+            if hasattr(names, "get"):
+                javascript_tree = names.get("/JavaScript")
+                if javascript_tree is not None and count_name_tree(javascript_tree) > 0:
+                    active_content_types.add("JavaScript")
+                embedded_tree = names.get("/EmbeddedFiles")
+                if embedded_tree is not None:
+                    embedded_file_count = count_name_tree(embedded_tree)
+                    if embedded_file_count:
+                        active_content_types.add("EmbeddedFile")
+            form = _resolve_pdf(catalog.get("/AcroForm"))
+            if hasattr(form, "get") and form.get("/XFA") is not None:
+                active_content_types.add("XFA")
+            if catalog.get("/Collection") is not None:
+                active_content_types.add("Collection")
+
         for page_index, page in enumerate(reader.pages, start=1):
+            record_actions(page.get("/AA"))
             rotation_value = _finite_float(page.get("/Rotate", 0)) or 0.0
             rotation = int(rotation_value) % 360
             observations.append(
@@ -551,14 +768,38 @@ def _inspect_pdf(path: Path, observations: list[Observation]) -> tuple[str, ...]
                     (item.name, item.subtype, item.embedded, item.location) for item in sorted_fonts
                 ),
             ),
+            _observation("pdf.xobject_count", len(seen_xobjects), "objects"),
+            _observation("pdf.image_xobject_count", image_xobject_count, "objects"),
+            _observation("pdf.form_xobject_count", form_xobject_count, "objects"),
+            _observation("pdf.other_xobject_count", other_xobject_count, "objects"),
+            _observation("pdf.image_color_spaces", tuple(sorted(image_color_spaces))),
+            _observation(
+                "pdf.image_xobject_details",
+                tuple(sorted(image_xobject_details, key=lambda item: item[0])),
+            ),
+            _observation("pdf.resource_color_spaces", tuple(sorted(resource_color_spaces))),
+            _observation("pdf.has_transparency", bool(transparency_reasons)),
+            _observation("pdf.transparency_reasons", tuple(sorted(transparency_reasons))),
+            _observation("pdf.active_content", bool(active_content_types)),
+            _observation("pdf.active_content_types", tuple(sorted(active_content_types))),
+            _observation("pdf.embedded_file_count", embedded_file_count, "files"),
+            _observation("pdf.external_uri_count", len(external_uris), "links"),
+            _observation("pdf.external_uris", tuple(sorted(external_uris))),
         )
     )
-    if page_count != 1:
-        return (
-            f"PDF contains {page_count} pages; scalar figure dimensions are unavailable. "
-            "Submit one figure per PDF artifact.",
+    result_warnings: list[str] = []
+    if active_content_types:
+        result_warnings.append(
+            "PDF contains passive indicators of active or embedded content: "
+            + ", ".join(sorted(active_content_types))
+            + ". The inspector did not execute or fetch that content."
         )
-    return ()
+    if page_count != 1:
+        result_warnings.append(
+            f"PDF contains {page_count} pages; scalar figure dimensions are unavailable. "
+            "Submit one figure per PDF artifact."
+        )
+    return tuple(result_warnings)
 
 
 def _svg_length_mm(raw_value: str | None) -> float | None:
@@ -679,14 +920,41 @@ def _inspect_svg(path: Path, size: int, observations: list[Observation]) -> tupl
     text_count = 0
     font_declarations: set[str] = set()
     external_links: set[str] = set()
+    active_content_types: set[str] = set()
+    script_element_count = 0
+    foreign_object_count = 0
+    event_handler_count = 0
+    javascript_link_count = 0
+    animation_element_count = 0
+    if b"<?xml-stylesheet" in lowered:
+        active_content_types.add("xml-stylesheet")
     for element in root.iter():
-        if _local_name(element.tag).casefold() == "text":
+        tag_name = _local_name(element.tag).casefold()
+        if tag_name == "text":
             text_count += 1
+        if tag_name == "script":
+            script_element_count += 1
+            active_content_types.add("script")
+        elif tag_name == "foreignobject":
+            foreign_object_count += 1
+            active_content_types.add("foreignObject")
+        elif tag_name in {"iframe", "audio", "video", "object", "embed"}:
+            active_content_types.add(tag_name)
+        if tag_name in {"animate", "set", "animatetransform", "animatemotion", "animatecolor"}:
+            animation_element_count += 1
+            active_content_types.add("animation")
         for raw_name, raw_value in element.attrib.items():
             name = _local_name(raw_name).casefold()
+            value_lower = raw_value.strip().casefold()
+            if name.startswith("on"):
+                event_handler_count += 1
+                active_content_types.add("event-handler")
             if name == "font-family":
                 font_declarations.add(raw_value.strip())
             if name in {"href", "src"}:
+                if value_lower.startswith(("javascript:", "vbscript:")):
+                    javascript_link_count += 1
+                    active_content_types.add("script-link")
                 reference = _external_reference(raw_value)
                 if reference is not None:
                     external_links.add(reference)
@@ -694,14 +962,18 @@ def _inspect_svg(path: Path, size: int, observations: list[Observation]) -> tupl
                 font_declarations.update(
                     match.group(1).strip() for match in _CSS_FONT_FAMILY.finditer(raw_value)
                 )
+                if _CSS_ACTIVE.search(raw_value):
+                    active_content_types.add("active-css")
             for match in _CSS_URL.finditer(raw_value):
                 reference = _external_reference(match.group(2))
                 if reference is not None:
                     external_links.add(reference)
-        if _local_name(element.tag).casefold() == "style" and element.text:
+        if tag_name == "style" and element.text:
             font_declarations.update(
                 match.group(1).strip() for match in _CSS_FONT_FAMILY.finditer(element.text)
             )
+            if _CSS_ACTIVE.search(element.text):
+                active_content_types.add("active-css")
             for match in _CSS_URL.finditer(element.text):
                 reference = _external_reference(match.group(2))
                 if reference is not None:
@@ -720,6 +992,13 @@ def _inspect_svg(path: Path, size: int, observations: list[Observation]) -> tupl
             _observation("svg.font_declarations", tuple(sorted(font_declarations))),
             _observation("svg.external_links", tuple(sorted(external_links))),
             _observation("svg.external_link_count", len(external_links), "links"),
+            _observation("svg.script_element_count", script_element_count, "elements"),
+            _observation("svg.foreign_object_count", foreign_object_count, "elements"),
+            _observation("svg.event_handler_count", event_handler_count, "attributes"),
+            _observation("svg.javascript_link_count", javascript_link_count, "links"),
+            _observation("svg.animation_element_count", animation_element_count, "elements"),
+            _observation("svg.active_content", bool(active_content_types)),
+            _observation("svg.active_content_types", tuple(sorted(active_content_types))),
         )
     )
     result_warnings: list[str] = []
@@ -731,6 +1010,12 @@ def _inspect_svg(path: Path, size: int, observations: list[Observation]) -> tupl
         result_warnings.append(
             "SVG physical dimensions could not be established from absolute width/height "
             "metadata; viewBox coordinates alone are not physical units."
+        )
+    if active_content_types:
+        result_warnings.append(
+            "SVG contains passive indicators of active content: "
+            + ", ".join(sorted(active_content_types))
+            + ". The inspector did not execute or fetch that content."
         )
     return tuple(result_warnings)
 
@@ -836,6 +1121,8 @@ def _raster_compression(image: Any, file_format: str) -> str | None:
 def _inspect_raster(
     path: Path, file_format: str, observations: list[Observation]
 ) -> tuple[str, ...]:
+    result_warnings: list[str] = []
+    has_physical_dimensions = False
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
@@ -871,35 +1158,115 @@ def _inspect_raster(
                 height = int(image.height)
                 if width <= 0 or height <= 0:
                     raise ArtifactParseError(f"Raster image {path} has non-positive dimensions.")
+                frame_count = int(getattr(image, "n_frames", 1))
+                if frame_count <= 0 or frame_count > _MAX_RASTER_FRAMES:
+                    raise ArtifactParseError(
+                        f"Refusing to inspect raster image {path}: {frame_count} frames exceeds "
+                        f"the safety limit of {_MAX_RASTER_FRAMES}."
+                    )
+                frame_sizes: list[tuple[int, int]] = []
+                frame_modes: list[str] = []
+                total_frame_pixels = 0
+                has_alpha = False
+                for frame_index in range(frame_count):
+                    image.seek(frame_index)
+                    frame_width = int(image.width)
+                    frame_height = int(image.height)
+                    if frame_width <= 0 or frame_height <= 0:
+                        raise ArtifactParseError(
+                            f"Raster image {path} frame {frame_index + 1} has non-positive "
+                            "dimensions."
+                        )
+                    frame_pixels = frame_width * frame_height
+                    if (
+                        frame_width > _MAX_RASTER_DIMENSION
+                        or frame_height > _MAX_RASTER_DIMENSION
+                        or frame_pixels > _MAX_RASTER_PIXELS
+                    ):
+                        raise ArtifactParseError(
+                            f"Refusing to inspect raster image {path}: frame {frame_index + 1} "
+                            f"is {frame_width}x{frame_height}, exceeding the raster safety limit."
+                        )
+                    total_frame_pixels += frame_pixels
+                    if total_frame_pixels > _MAX_RASTER_TOTAL_FRAME_PIXELS:
+                        raise ArtifactParseError(
+                            f"Refusing to inspect raster image {path}: decoded frame dimensions "
+                            f"represent more than {_MAX_RASTER_TOTAL_FRAME_PIXELS} total pixels."
+                        )
+                    frame_sizes.append((frame_width, frame_height))
+                    frame_modes.append(str(image.mode))
+                    try:
+                        has_alpha = (
+                            has_alpha or "A" in image.getbands() or "transparency" in image.info
+                        )
+                    except (TypeError, ValueError):
+                        has_alpha = has_alpha or "A" in str(image.mode)
+                image.seek(0)
+
+                orientation = 1
+                try:
+                    raw_orientation = image.getexif().get(274, 1)
+                    parsed_orientation = int(raw_orientation)
+                    if 1 <= parsed_orientation <= 8:
+                        orientation = parsed_orientation
+                except (AttributeError, TypeError, ValueError):
+                    orientation = 1
+                display_width, display_height = width, height
+                if orientation in {5, 6, 7, 8}:
+                    display_width, display_height = height, width
+
                 dpi = _coerce_dpi_pair(image.info.get("dpi"))
                 if dpi is None and file_format == "tiff":
                     dpi = _tiff_dpi(image)
                 bit_depth = _raster_bit_depth(path, image, file_format)
                 icc_profile = image.info.get("icc_profile")
                 icc_size = len(icc_profile) if isinstance(icc_profile, bytes) else 0
-                frame_count = int(getattr(image, "n_frames", 1))
                 compression = _raster_compression(image, file_format)
                 observations.extend(
                     (
                         _observation("artifact.page_count", frame_count, "frames"),
+                        _observation("artifact.is_single_frame", frame_count == 1),
                         _observation("raster.pixel_width", width, "pixels"),
                         _observation("raster.pixel_height", height, "pixels"),
                         _observation("raster.pixel_count", width * height, "pixels"),
+                        _observation("raster.display_pixel_width", display_width, "pixels"),
+                        _observation("raster.display_pixel_height", display_height, "pixels"),
                         _observation("raster.frame_count", frame_count, "frames"),
+                        _observation("raster.frame_sizes", tuple(frame_sizes)),
+                        _observation("raster.frame_modes", tuple(frame_modes)),
+                        _observation(
+                            "raster.frames_uniform",
+                            len(set(frame_sizes)) == 1 and len(set(frame_modes)) == 1,
+                        ),
+                        _observation("raster.total_frame_pixels", total_frame_pixels, "pixels"),
                         _observation("raster.mode", str(image.mode)),
+                        _observation("raster.has_alpha", has_alpha),
+                        _observation("raster.exif_orientation", orientation),
+                        _observation("raster.requires_orientation_transform", orientation != 1),
                         _observation("raster.bit_depth", bit_depth, "bits/channel"),
                         _observation("raster.has_icc_profile", icc_size > 0),
                         _observation("raster.icc_profile_size", icc_size, "bytes"),
                         _observation("raster.compression", compression),
                     )
                 )
-                if dpi is not None:
+                if dpi is not None and frame_count == 1:
+                    dpi_x, dpi_y = dpi
+                    if orientation in {5, 6, 7, 8}:
+                        dpi_x, dpi_y = dpi_y, dpi_x
+                    observations.extend(
+                        (
+                            _observation("raster.dpi_x", dpi_x, "dpi"),
+                            _observation("raster.dpi_y", dpi_y, "dpi"),
+                            _observation("artifact.width_mm", display_width / dpi_x * 25.4, "mm"),
+                            _observation("artifact.height_mm", display_height / dpi_y * 25.4, "mm"),
+                        )
+                    )
+                    has_physical_dimensions = True
+                elif dpi is not None:
                     observations.extend(
                         (
                             _observation("raster.dpi_x", dpi[0], "dpi"),
                             _observation("raster.dpi_y", dpi[1], "dpi"),
-                            _observation("artifact.width_mm", width / dpi[0] * 25.4, "mm"),
-                            _observation("artifact.height_mm", height / dpi[1] * 25.4, "mm"),
                         )
                     )
     except ArtifactInspectionError:
@@ -911,14 +1278,22 @@ def _inspect_raster(
     except (OSError, UnidentifiedImageError, ValueError, SyntaxError) as exc:
         raise ArtifactParseError(f"Could not parse raster image {path}: {exc}") from exc
 
-    if observations[-1].key not in {"artifact.width_mm", "artifact.height_mm"} and not any(
-        item.key == "artifact.width_mm" for item in observations
-    ):
-        return (
-            "Raster physical dimensions could not be established because valid DPI metadata "
-            "is absent.",
+    if frame_count != 1:
+        result_warnings.append(
+            f"Raster contains {frame_count} frames; scalar physical dimensions are unavailable. "
+            "Export one static figure per artifact."
         )
-    return ()
+    if not has_physical_dimensions and frame_count == 1:
+        result_warnings.append(
+            "Raster physical dimensions could not be established because valid DPI metadata "
+            "is absent."
+        )
+    if orientation != 1:
+        result_warnings.append(
+            f"Raster uses EXIF orientation {orientation}; normalize pixel orientation before "
+            "submission when downstream software may ignore EXIF metadata."
+        )
+    return tuple(result_warnings)
 
 
 def _read_eps_sections(path: Path, size: int) -> str:

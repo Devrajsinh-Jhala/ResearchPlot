@@ -1,134 +1,171 @@
 # Compliance reports
 
-ResearchPlot treats rule importance and observed outcome as independent dimensions.
-This prevents an unobservable required rule from appearing to pass and prevents a
-recommendation from becoming an accidental hard requirement.
+ResearchPlot keeps four questions separate:
+
+1. How strong is the venue rule?
+2. What did this observer establish?
+3. Were all required evidence phases covered?
+4. Which policy should block the current operation?
+
+That separation prevents a recommendation from becoming an accidental hard failure and
+prevents an unavailable required check from appearing to pass.
 
 ## Rule levels
 
-| Level | Meaning | Blocking behavior |
+| Level | Meaning | Effect on venue verdict |
 | --- | --- | --- |
-| `required` | The official source states a requirement. | A failure makes the report non-compliant. An unresolved check makes it indeterminate. |
-| `recommended` | The source recommends or prefers the behavior. | Produces warnings but does not make the report non-compliant. |
-| `inferred` | ResearchPlot-derived guidance, clearly identified as such. | Informational only and never blocks export. |
+| `required` | The cited official source states a requirement. | A failure is non-compliant; missing or skipped evidence is indeterminate. |
+| `recommended` | The source recommends or prefers the behavior. | Reported as guidance; does not make the venue verdict non-compliant. |
+| `inferred` | ResearchPlot-derived guidance, explicitly labeled. | Informational and never blocks the venue verdict. |
 
-Profiles leave a property unspecified when official guidance is absent. They do not
-promote a common practice into a venue rule.
+When official guidance is absent, the profile leaves the property unspecified.
 
-## Check outcomes
+## Findings and normalized statuses
 
-| Outcome | Meaning |
-| --- | --- |
-| `pass` | The inspector established that the constraint is satisfied. |
-| `fail` | The inspector established that the constraint is violated. |
-| `skip` | The constraint applies, but the available evidence cannot establish it. |
+The v2 public vocabulary is `PASS`, `FAIL`, `WARNING`, `INFO`, `SKIPPED`, and
+`NOT_APPLICABLE`. The compatibility `Report` used by `Target` stores low-level
+`Outcome.PASS`, `Outcome.FAIL`, and `Outcome.SKIP`; strength determines whether a failed
+finding is a failure, warning, or information in a rendered result.
 
-Rules that do not apply to the selected target and phase are not emitted as findings.
+Not-applicable rules do not produce a failed check. An operational problem—unreadable
+input, an unsafe path, parser failure, timeout, or missing required capability—is an
+exception and CLI exit code `2`, not a compliance finding.
 
-The exact enum spelling is stable in serialized reports; Python code should use the
-published enum members rather than comparing display labels.
+## Phase coverage
 
-## Report verdicts
+Rules identify the phases capable of providing evidence:
+
+- **live**: Matplotlib figure dimensions and artists;
+- **file**: serialized PDF/SVG/EPS/raster structure and metadata;
+- **bundle**: configured prose, source data, deliverables, attestations, and manifests;
+- **manuscript**: compiled-PDF structure and, when supported, placement evidence.
+
+`CompliancePlan` compiles each applicable required rule into a `CoverageRequirement`.
+Assessment records the status of that requirement as satisfied, failed, unresolved, or
+missing.
 
 ```mermaid
 flowchart TD
-    A["Applicable required checks"] --> B{"Any failure?"}
+    A["Applicable required coverage"] --> B{"Known required failure?"}
     B -- Yes --> N["NON_COMPLIANT"]
-    B -- No --> C{"Any unresolved check?"}
+    B -- No --> C{"Missing, skipped, or capability gap?"}
     C -- Yes --> I["INDETERMINATE"]
     C -- No --> P["COMPLIANT"]
 ```
 
-Recommendations and inferred guidance are still included in every verdict.
+For example, an external PDF can establish its page width and whether its fonts are
+embedded. It cannot reliably prove all original Matplotlib font settings. If the
+profile requires live typography evidence, a project with only that PDF is
+`INDETERMINATE` even when every file-phase check passes.
+
+## Report interfaces
+
+A v2 project check returns `PlanAssessment` (also exported as `ValidationReport`):
 
 ```python
-report = target.validate(fig)
+report = project.plan(frozen=True).check()
 
-match report.verdict:
-    case rp.Verdict.COMPLIANT:
-        print("All applicable required checks passed")
-    case rp.Verdict.NON_COMPLIANT:
-        for check in report.failures:
-            print(check.message)
-    case rp.Verdict.INDETERMINATE:
-        for check in report.unresolved:
-            print(check.message)
+report.verdict
+report.passed  # true only for COMPLIANT
+report.failures
+report.warnings
+report.unresolved
+report.coverage
+report.capability_gaps
+report.remediations
+report.sources
+payload = report.to_dict()
 ```
 
-Convenience collections expose `failures`, `warnings`, and `unresolved`; `findings`
-contains the complete ordered evidence and `to_dict()` produces the versioned machine
-representation.
+`to_dict()` emits schema version 2 and includes the profile coordinate/digest, summary,
+official sources, flat findings, remediation strings, coverage, capability gaps, and
+the phase reports that supplied evidence.
+
+Do not use `.passed` to erase the distinction between a known violation and missing
+evidence. Branch on `Verdict` when behavior differs:
+
+```python
+match report.verdict:
+    case rp.Verdict.COMPLIANT:
+        publish()
+    case rp.Verdict.NON_COMPLIANT:
+        show_failures(report.failures)
+    case rp.Verdict.INDETERMINATE:
+        request_evidence(report.unresolved, report.capability_gaps)
+```
 
 ## Policies
 
-A verdict describes evidence. A policy decides whether an operation may continue:
+A verdict describes evidence. A policy controls whether an export or bundle operation
+continues:
 
-| Policy | Blocks `NON_COMPLIANT` | Blocks `INDETERMINATE` | Use case |
+| Policy | Blocks `NON_COMPLIANT` | Blocks `INDETERMINATE` | Typical use |
 | --- | :---: | :---: | --- |
-| `complete` | Yes | Yes | Release and submission CI; default export policy. |
-| `violations` | Yes | No | Incremental adoption where unresolved checks are reviewed manually. |
-| `off` | No | No | Generate evidence without enforcement. |
+| `complete` | Yes | Yes | Release and submission CI. |
+| `violations` | Yes | No | Incremental authoring while gaps remain visible. |
+| `off` | No | No | Evidence generation without enforcement. |
 
-Policy does not erase findings. An `off` export still returns the same report and
-records it in the manifest.
+Policy never changes the report. An `off` export retains the same findings and does not
+become venue-compliant merely because publication was allowed.
 
-## Automated, manual, and unsupported verification
+## Attestations and waivers
 
-Each profile rule declares its verification mode:
+An attestation can satisfy only a rule whose profile verification mode permits manual
+evidence. Schema-v3 configuration records reviewer identity, an ISO date, rationale,
+and referenced evidence:
 
-- **Automated**: an inspector can establish the rule from a live figure or file.
-- **Manual**: a person must inspect or attest to the condition.
-- **Unsupported**: ResearchPlot has no reliable probe for this rule yet.
+```toml
+[figures.attestations."metadata.alt_text.distinct_from_caption"]
+reviewer = "A. Researcher"
+date = "2026-08-03"
+rationale = "The description states the key trend not repeated in the caption."
+evidence = ["reviews/figure1-accessibility.md"]
+```
 
-Manual requirements begin unresolved. Python workflows can provide an explicit
-attestation, which is recorded with the figure report instead of being confused with
-an automated observation:
+The rule ID is the table key and is also bound into the frozen `ManualAttestation`
+object. This example applies to the manual rule in `acm-acmart`; an attestation for an
+automated or unknown rule cannot manufacture a pass. String-only statements remain
+readable as a deprecated v1 compatibility form.
+
+Waivers record an exact profile digest, reviewer, reason, and expiry:
+
+```toml
+[figures.waivers."figure.title.prohibited"]
+profile_digest = "c1a79e3c48483773284ecde6024f7b65ec0fa657b88f29fd8b7e23e421110ffa"
+reviewer = "A. Researcher"
+reason = "Recommendation reviewed; title retained during author review."
+expires_on = "2026-09-30"
+```
+
+`Waiver.expired` is computed against the current date. A digest mismatch is rejected;
+an expired waiver is preserved but omitted from active planning. A waiver may appear in
+manifest metadata but never converts a required violation into `COMPLIANT`.
+
+## Heuristics remain advisory
+
+Color-vision previews and visual diagnostics expose deterministic images or measured
+signals, but their interpretation is heuristic. They are review prompts unless a
+profile has a compatible verified rule and probe. ResearchPlot never treats a global
+contrast metric as proof that every meaningful graphical object meets a threshold.
+
+## CLI and machine output
+
+```bash
+researchplot check --config researchplot.toml --format json --output build/report.json
+researchplot check --config researchplot.toml --format sarif --output build/report.sarif
+```
+
+Self-contained HTML can also be produced from Python:
 
 ```python
-report = target.validate(
-    fig,
-    attestations={"panels.order.logical": "Panels are ordered left-to-right, then top-to-bottom."},
-)
+rp.write_html_report(report, "build/report.html")
 ```
 
-An attestation is evidence supplied by the author, not a claim that ResearchPlot
-verified the content independently.
+CLI exit codes are stable:
 
-## Sources travel with findings
-
-Every check can expose:
-
-- profile coordinate, digest, and target context;
-- rule ID, level, phase, and verification mode;
-- observed and expected values;
-- official source IDs, titles, URLs, locators, and verification dates;
-- a focused suggestion when remediation is mechanical.
-
-Report/profile metadata also carries caveats. Together, these make a result reviewable
-without trusting a green badge in isolation.
-
-## Live validation versus artifact auditing
-
-Live validation can see Matplotlib artists, font sizes, lines, markers, labels, and
-figure dimensions. File auditing can see the actual page box, serialized fonts,
-resolution metadata, color modes, and format-level restrictions.
-
-Export combines both stages. A check can legitimately differ between them—for example,
-a font visible in Matplotlib can become an unembedded font in a PDF. The post-export
-artifact result is therefore part of the final report.
-
-## JSON and SARIF
-
-Use JSON for stable programmatic consumption:
-
-```bash
-researchplot check --config researchplot.toml --format json > report.json
-```
-
-Use SARIF for CI annotations:
-
-```bash
-researchplot check --config researchplot.toml --format sarif > researchplot.sarif
-```
-
-The [manifest and report formats](formats.md) page documents versioning and paths.
+| Code | Meaning |
+| --- | --- |
+| `0` | Compliant. |
+| `1` | At least one required rule fails. |
+| `2` | Invalid or unsafe input, parser failure, resource limit, or missing operational capability. |
+| `3` | Required evidence is unavailable, so the result is indeterminate. |

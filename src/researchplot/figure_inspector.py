@@ -184,11 +184,11 @@ def inspect_figure(fig: Figure) -> ObservationSet:
 
     return ObservationSet(
         (
-            Observation("figure.width_mm", float(size_inches[0]) * 25.4),
-            Observation("figure.height_mm", float(size_inches[1]) * 25.4),
-            Observation("artifact.width_mm", float(size_inches[0]) * 25.4),
-            Observation("artifact.height_mm", float(size_inches[1]) * 25.4),
-            Observation("figure.dpi", float(fig.dpi)),
+            Observation("figure.width_mm", float(size_inches[0]) * 25.4, unit="mm"),
+            Observation("figure.height_mm", float(size_inches[1]) * 25.4, unit="mm"),
+            Observation("artifact.width_mm", float(size_inches[0]) * 25.4, unit="mm"),
+            Observation("artifact.height_mm", float(size_inches[1]) * 25.4, unit="mm"),
+            Observation("figure.dpi", float(fig.dpi), unit="dpi"),
             Observation("font.families", declared_families, available=bool(texts)),
             Observation("font.families.resolved", resolved_families, available=bool(texts)),
             Observation("font.families.effective", effective_families, available=bool(texts)),
@@ -196,19 +196,25 @@ def inspect_figure(fig: Figure) -> ObservationSet:
                 "font.size.min_pt",
                 min(font_sizes) if font_sizes else None,
                 available=bool(font_sizes),
+                unit="pt",
             ),
             Observation(
                 "font.size.max_pt",
                 max(font_sizes) if font_sizes else None,
                 available=bool(font_sizes),
+                unit="pt",
             ),
             Observation(
-                "line.width.min_pt", min(widths) if widths else None, available=bool(widths)
+                "line.width.min_pt",
+                min(widths) if widths else None,
+                available=bool(widths),
+                unit="pt",
             ),
             Observation(
                 "marker.size.min_pt",
                 min(markers) if markers else None,
                 available=bool(markers),
+                unit="pt",
             ),
             Observation("figure.has_title", bool(titles), detail=", ".join(titles) or None),
             Observation("color.non_color_distinctions", non_color),

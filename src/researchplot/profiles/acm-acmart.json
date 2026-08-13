@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "acm-acmart",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -25,7 +25,11 @@
       "url": "https://www.acm.org/binaries/content/assets/publications/taps/acm_layout_submission_template.pdf",
       "locator": "Section 2.2.4, Figure Descriptions",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_template",
+      "publisher": "ACM acmart",
+      "archive_url": null,
+      "content_sha256": null
     },
     {
       "id": "acm-primary-template",
@@ -33,7 +37,11 @@
       "url": "https://authors.acm.org/binaries/content/assets/publications/taps/acm_master_article_template_instructions.pdf",
       "locator": "Check Paragraph Styles, Language and Supply Alt Text for Figures and Tables",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_template",
+      "publisher": "ACM acmart",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -56,7 +64,10 @@
         "acm-layout-template",
         "acm-primary-template"
       ],
-      "description": "Every non-decorative figure must include a plain-text figure description (alt text)."
+      "description": "Every non-decorative figure must include a plain-text figure description (alt text).",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "metadata.alt_text.distinct_from_caption",
@@ -76,7 +87,25 @@
       "source_ids": [
         "acm-layout-template"
       ],
-      "description": "The figure description must add important information instead of repeating the caption."
+      "description": "The figure description must add important information instead of repeating the caption.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "elsevier-generic",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -23,7 +23,11 @@
       "url": "https://www.elsevier.com/en-au/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing",
       "locator": "Artwork sizing: dimensions and resolution",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "Elsevier Generic Artwork",
+      "archive_url": null,
+      "content_sha256": null
     },
     {
       "id": "elsevier-overview",
@@ -31,7 +35,11 @@
       "url": "https://www.elsevier.com/en-gb/about/policies-and-standards/author/artwork-and-media-instructions/artwork-overview",
       "locator": "Artwork overview: fonts and supported formats",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "Elsevier Generic Artwork",
+      "archive_url": null,
+      "content_sha256": null
     },
     {
       "id": "elsevier-faq",
@@ -39,7 +47,11 @@
       "url": "https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-faq",
       "locator": "Artwork FAQ: minimum line width",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "Elsevier Generic Artwork",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -66,7 +78,10 @@
       "source_ids": [
         "elsevier-size"
       ],
-      "description": "Elsevier minimal artwork target width."
+      "description": "Elsevier minimal artwork target width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.single",
@@ -91,7 +106,10 @@
       "source_ids": [
         "elsevier-size"
       ],
-      "description": "Elsevier single-column target width."
+      "description": "Elsevier single-column target width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.one-and-half",
@@ -116,7 +134,10 @@
       "source_ids": [
         "elsevier-size"
       ],
-      "description": "Elsevier one-and-a-half-column target width."
+      "description": "Elsevier one-and-a-half-column target width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.double",
@@ -141,7 +162,10 @@
       "source_ids": [
         "elsevier-size"
       ],
-      "description": "Elsevier double-column target width."
+      "description": "Elsevier double-column target width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.family",
@@ -169,7 +193,10 @@
       "source_ids": [
         "elsevier-overview"
       ],
-      "description": "Use one of Elsevier's recommended standard fonts."
+      "description": "Use one of Elsevier's recommended standard fonts.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.target",
@@ -189,7 +216,10 @@
       "source_ids": [
         "elsevier-overview"
       ],
-      "description": "Conservative generic default; the target journal can differ."
+      "description": "Conservative generic default; the target journal can differ.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "line.width.min",
@@ -209,7 +239,10 @@
       "source_ids": [
         "elsevier-faq"
       ],
-      "description": "Elsevier's recommended minimum line width."
+      "description": "Elsevier's recommended minimum line width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.vector",
@@ -237,7 +270,10 @@
       "source_ids": [
         "elsevier-overview"
       ],
-      "description": "Preferred vector formats for charts and diagrams."
+      "description": "Preferred vector formats for charts and diagrams.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.halftone",
@@ -265,7 +301,10 @@
       "source_ids": [
         "elsevier-overview"
       ],
-      "description": "Recommended bitmap containers."
+      "description": "Recommended bitmap containers.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.combination",
@@ -293,7 +332,10 @@
       "source_ids": [
         "elsevier-overview"
       ],
-      "description": "Recommended containers for combination artwork."
+      "description": "Recommended containers for combination artwork.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.line_art",
@@ -321,7 +363,10 @@
       "source_ids": [
         "elsevier-overview"
       ],
-      "description": "Prefer vector or high-resolution TIFF for line art."
+      "description": "Prefer vector or high-resolution TIFF for line art.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.min_dpi.halftone",
@@ -351,7 +396,10 @@
       "source_ids": [
         "elsevier-size"
       ],
-      "description": "Minimum halftone resolution."
+      "description": "Minimum halftone resolution.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.min_dpi.combination",
@@ -380,7 +428,10 @@
       "source_ids": [
         "elsevier-size"
       ],
-      "description": "Minimum combination-art resolution."
+      "description": "Minimum combination-art resolution.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.min_dpi.line_art",
@@ -409,7 +460,25 @@
       "source_ids": [
         "elsevier-size"
       ],
-      "description": "Minimum line-art resolution."
+      "description": "Minimum line-art resolution.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

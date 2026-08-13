@@ -1,0 +1,243 @@
+{
+  "schema_version": 3,
+  "id": "colm-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "Conference on Language Modeling 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": [
+    "colm",
+    "colm 2026"
+  ],
+  "scope": "COLM 2026 proceedings figures.",
+  "default_width": "full",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The 5.5-inch rule is full text width; narrower layouts remain author choices unless the template states otherwise."
+  ],
+  "sources": [
+    {
+      "id": "colm-template",
+      "title": "Official COLM 2026 template",
+      "url": "https://github.com/COLM-org/Template/releases/tag/2026",
+      "locator": "colm2026_conference.sty and example paper",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_template",
+      "publisher": "Official COLM 2026 template",
+      "archive_url": null,
+      "content_sha256": null
+    },
+    {
+      "id": "colm-instructions",
+      "title": "COLM submission instructions",
+      "url": "https://colmweb.org/submission-instructions.html",
+      "locator": "Official template requirement",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "COLM submission instructions",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.full",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 139.7,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "colm-template"
+      ],
+      "description": "Full text width is 5.5 inches.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "inferred",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 228.6,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "colm-template"
+      ],
+      "description": "The template text block is 9 inches high.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "Derived from the official template text-height declaration."
+    },
+    {
+      "id": "font.size.minimum",
+      "level": "required",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 9,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "colm-template"
+      ],
+      "description": "Figure text should not be smaller than the template small size.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.family.template",
+      "level": "recommended",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Palatino",
+          "Palatino Linotype",
+          "Book Antiqua",
+          "serif"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "colm-template"
+      ],
+      "description": "Match the Palatino-family template typography.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.formats.vector",
+      "level": "recommended",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "pdf",
+          "svg"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [
+          "data_visualization",
+          "line_art"
+        ],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "colm-template"
+      ],
+      "description": "Use vector PDF or SVG for line art when possible.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "accessibility.non_color_distinctions",
+      "level": "recommended",
+      "probe": "color.non_color_distinctions",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "colm-template"
+      ],
+      "description": "Figures should remain comprehensible in black and white.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

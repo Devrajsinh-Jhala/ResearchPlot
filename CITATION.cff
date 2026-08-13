@@ -5,8 +5,17 @@ type: software
 authors:
   - family-names: "Jhala"
     given-names: "Devrajsinh"
-version: 1.0.0
-date-released: 2026-08-02
+version: 2.0.0
+date-released: 2026-08-13
 url: "https://github.com/Devrajsinh-Jhala/ResearchPlot"
 repository-code: "https://github.com/Devrajsinh-Jhala/ResearchPlot"
+abstract: >-
+  ResearchPlot is an offline, source-backed venue-compliance compiler and local
+  preflight workspace for research figures, artifacts, and submission evidence.
+keywords:
+  - research figures
+  - venue compliance
+  - artifact auditing
+  - reproducibility
+  - Matplotlib
 license: MIT

@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "neurips-2026",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -24,7 +24,11 @@
       "url": "https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip",
       "locator": "Formatting instructions: page layout, typography, and PDF requirements",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "NeurIPS 2026",
+      "archive_url": null,
+      "content_sha256": null
     },
     {
       "id": "neurips-cfp",
@@ -32,7 +36,11 @@
       "url": "https://neurips.cc/Conferences/2026/CallForPapers",
       "locator": "Call for Papers: formatting instructions",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "NeurIPS 2026",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -59,7 +67,10 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "The single-column NeurIPS text width is 5.5 inches."
+      "description": "The single-column NeurIPS text width is 5.5 inches.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.family",
@@ -83,7 +94,10 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "Match the conference template's serif typography."
+      "description": "Match the conference template's serif typography.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.min",
@@ -103,7 +117,10 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "Avoid labels smaller than the template's footnote size."
+      "description": "Avoid labels smaller than the template's footnote size.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.target",
@@ -123,7 +140,10 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "Match the template's normal text size."
+      "description": "Match the template's normal text size.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "line.width.min",
@@ -143,7 +163,10 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "Conservative print-safe line-weight floor."
+      "description": "Conservative print-safe line-weight floor.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.type3.prohibited",
@@ -167,7 +190,10 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "PDFs must not contain Type 3 fonts."
+      "description": "PDFs must not contain Type 3 fonts.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.truetype_embedding.required",
@@ -191,7 +217,10 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "TrueType fonts in PDFs must be embedded."
+      "description": "TrueType fonts in PDFs must be embedded.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.vector",
@@ -218,7 +247,25 @@
       "source_ids": [
         "neurips-template"
       ],
-      "description": "The author kit demonstrates PDF figure inclusion."
+      "description": "The author kit demonstrates PDF figure inclusion.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

@@ -6,6 +6,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+from .api_types import CheckStatus, EvidenceConfidence
 from .models import (
     ConstraintOperator,
     RuleConstraint,
@@ -16,6 +17,8 @@ from .models import (
     VenueRule,
 )
 from .observations import ObservationSet
+from .rule_expressions import evaluate_constraint, evaluate_expression, expression_probes
+from .units import Quantity
 
 REPORT_SCHEMA_VERSION = 1
 
@@ -86,6 +89,20 @@ class Finding:
     @property
     def unresolved_required(self) -> bool:
         return self.level is RuleLevel.REQUIRED and self.outcome is Outcome.SKIP
+
+    @property
+    def status(self) -> CheckStatus:
+        """Return the normalized six-state v2 status for this finding."""
+
+        if self.outcome is Outcome.PASS:
+            return CheckStatus.PASS
+        if self.outcome is Outcome.SKIP:
+            return CheckStatus.SKIPPED
+        if self.level is RuleLevel.REQUIRED:
+            return CheckStatus.FAIL
+        if self.level is RuleLevel.RECOMMENDED:
+            return CheckStatus.WARNING
+        return CheckStatus.INFO
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -334,7 +351,7 @@ class RuleEngine:
         target: TargetContext,
         *,
         phase: str,
-        attestations: Mapping[str, str] | None = None,
+        attestations: Mapping[str, object] | None = None,
     ) -> Report:
         findings: list[Finding] = []
         attestations = attestations or {}
@@ -364,11 +381,17 @@ class RuleEngine:
                 continue
             if verification == "manual":
                 raw_attestation = attestations.get(rule.id)
-                attestation = (
-                    raw_attestation.strip()
-                    if isinstance(raw_attestation, str) and raw_attestation.strip()
-                    else None
-                )
+                attestation: object | None = None
+                if isinstance(raw_attestation, str) and raw_attestation.strip():
+                    attestation = raw_attestation.strip()
+                elif raw_attestation is not None:
+                    serializer = getattr(raw_attestation, "to_dict", None)
+                    payload = serializer() if callable(serializer) else raw_attestation
+                    if isinstance(payload, Mapping) and all(
+                        isinstance(payload.get(key), str) and str(payload[key]).strip()
+                        for key in ("reviewer", "date", "rationale")
+                    ):
+                        attestation = dict(payload)
                 findings.append(
                     Finding(
                         rule.id,
@@ -388,24 +411,139 @@ class RuleEngine:
                     )
                 )
                 continue
+            if rule.expression is not None:
+                expression_values: dict[str, object] = {}
+                unavailable: list[str] = []
+                heuristic: list[str] = []
+                observed_values: dict[str, object] = {}
+                for expression_probe in expression_probes(rule.expression):
+                    candidate = observations.get(expression_probe)
+                    if (
+                        candidate is None
+                        or not candidate.available
+                        or candidate.phase != selected_phase.value
+                    ):
+                        unavailable.append(expression_probe)
+                        continue
+                    observed_values[expression_probe] = candidate.value
+                    if (
+                        rule.level is RuleLevel.REQUIRED
+                        and candidate.confidence is EvidenceConfidence.HEURISTIC
+                    ):
+                        heuristic.append(expression_probe)
+                        continue
+                    expression_values[expression_probe] = (
+                        Quantity(float(candidate.value), candidate.unit)
+                        if candidate.unit is not None
+                        and isinstance(candidate.value, (int, float))
+                        and not isinstance(candidate.value, bool)
+                        else candidate.value
+                    )
+                if unavailable or heuristic:
+                    reasons: list[str] = []
+                    if unavailable:
+                        reasons.append("unavailable probes: " + ", ".join(unavailable))
+                    if heuristic:
+                        reasons.append(
+                            "heuristic probes cannot establish a required rule: "
+                            + ", ".join(heuristic)
+                        )
+                    findings.append(
+                        Finding(
+                            rule.id,
+                            Outcome.SKIP,
+                            rule.level,
+                            phase,
+                            f"Rule {rule.id} is unresolved ({'; '.join(reasons)}).",
+                            observed=observed_values,
+                            expected=rule.expression.to_dict(),
+                            source_urls=source_urls,
+                            verification=verification,
+                            sources=sources,
+                        )
+                    )
+                    continue
+                try:
+                    expression_result = evaluate_expression(rule.expression, expression_values)
+                except (TypeError, ValueError) as exc:
+                    findings.append(
+                        Finding(
+                            rule.id,
+                            Outcome.SKIP,
+                            rule.level,
+                            phase,
+                            f"Could not evaluate rule expression: {exc}",
+                            observed=observed_values,
+                            expected=rule.expression.to_dict(),
+                            source_urls=source_urls,
+                            verification=verification,
+                            sources=sources,
+                        )
+                    )
+                    continue
+                expression_outcome = (
+                    Outcome.SKIP
+                    if expression_result is None
+                    else Outcome.PASS
+                    if expression_result
+                    else Outcome.FAIL
+                )
+                findings.append(
+                    Finding(
+                        rule.id,
+                        expression_outcome,
+                        rule.level,
+                        phase,
+                        rule.description
+                        if expression_outcome is Outcome.PASS
+                        else f"{rule.description} Observed values do not satisfy the expression."
+                        if expression_outcome is Outcome.FAIL
+                        else f"{rule.description} Required observations are unavailable.",
+                        observed=observed_values,
+                        expected=rule.expression.to_dict(),
+                        source_urls=source_urls,
+                        suggestion=None
+                        if expression_outcome is Outcome.PASS
+                        else f"Review the expression and source-backed rule {rule.id}.",
+                        verification=verification,
+                        sources=sources,
+                    )
+                )
+                continue
             probe = rule.probe
             observation = observations.get(probe)
             phase_mismatch = observation is not None and observation.phase != selected_phase.value
-            if observation is None or not observation.available or phase_mismatch:
+            heuristic_required = (
+                observation is not None
+                and observation.confidence is EvidenceConfidence.HEURISTIC
+                and rule.level is RuleLevel.REQUIRED
+            )
+            if (
+                observation is None
+                or not observation.available
+                or phase_mismatch
+                or heuristic_required
+            ):
+                if heuristic_required:
+                    unavailable_message = (
+                        f"Probe {probe!r} is heuristic and cannot establish a required rule."
+                    )
+                elif phase_mismatch and observation is not None:
+                    unavailable_message = (
+                        f"Probe {probe!r} was observed during {observation.phase!r}, "
+                        f"not {selected_phase.value!r}."
+                    )
+                elif observation is not None and observation.detail:
+                    unavailable_message = observation.detail
+                else:
+                    unavailable_message = f"Probe {probe!r} is unavailable."
                 findings.append(
                     Finding(
                         rule.id,
                         Outcome.SKIP,
                         rule.level,
                         phase,
-                        (
-                            f"Probe {probe!r} was observed during {observation.phase!r}, "
-                            f"not {selected_phase.value!r}."
-                            if phase_mismatch and observation is not None
-                            else observation.detail
-                            if observation is not None and observation.detail
-                            else f"Probe {probe!r} is unavailable."
-                        ),
+                        unavailable_message,
                         observed=None,
                         expected=_expected(rule.constraint),
                         source_urls=source_urls,
@@ -416,7 +554,14 @@ class RuleEngine:
                 continue
             constraint = rule.constraint
             try:
-                passed = _evaluate_constraint(observation.value, constraint)
+                value: object = observation.value
+                if (
+                    observation.unit is not None
+                    and isinstance(value, (int, float))
+                    and not isinstance(value, bool)
+                ):
+                    value = Quantity(float(value), observation.unit)
+                passed = evaluate_constraint(value, constraint)
             except (TypeError, ValueError) as exc:
                 findings.append(
                     Finding(

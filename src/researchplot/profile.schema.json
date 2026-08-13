@@ -1,12 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://researchplot.dev/schema/profile-v2.json",
+  "$id": "https://researchplot.dev/schema/profile-v3.json",
   "title": "ResearchPlot venue profile",
   "description": "Offline, source-backed venue compliance profile schema.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "namespace",
+    "status",
+    "license",
+    "maintainers",
+    "extends",
+    "governance",
     "id",
     "revision",
     "effective_date",
@@ -22,7 +28,21 @@
     "rules"
   ],
   "properties": {
-    "schema_version": {"const": 2},
+    "schema_version": {"const": 3},
+    "namespace": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+        "status": {"enum": ["draft", "verified", "deprecated", "withdrawn", "translated"]},
+    "license": {"type": "string", "minLength": 1},
+    "maintainers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "extends": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^(?:[a-z0-9][a-z0-9._-]*/)?[a-z0-9]+(?:-[a-z0-9]+)*@[0-9]{4}\\.[0-9]{2}\\.[0-9]+$"},
+      "uniqueItems": true
+    },
+    "governance": {"$ref": "#/$defs/governance"},
     "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
     "revision": {"type": "string", "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]+$"},
     "effective_date": {"type": "string", "format": "date"},
@@ -64,7 +84,22 @@
         "url": {"type": "string", "pattern": "^https://"},
         "locator": {"type": "string", "minLength": 1},
         "retrieved_on": {"type": "string", "format": "date"},
-        "verified_on": {"type": "string", "format": "date"}
+        "verified_on": {"type": "string", "format": "date"},
+        "kind": {"enum": ["official_guideline", "official_template", "official_policy", "standard", "archived_copy"]},
+        "publisher": {"type": ["string", "null"]},
+        "archive_url": {"type": ["string", "null"], "pattern": "^https://"},
+        "content_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "reviewers", "reviewed_on", "change_note"],
+      "properties": {
+        "policy": {"type": "string", "minLength": 1},
+        "reviewers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "reviewed_on": {"type": ["string", "null"], "format": "date"},
+        "change_note": {"type": ["string", "null"]}
       }
     },
     "constraintValue": {
@@ -93,7 +128,7 @@
       "required": ["operator", "value", "unit", "tolerance"],
       "properties": {
         "operator": {
-          "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "not_in", "between", "subset", "contains", "not_contains", "approx", "required", "prohibited"]
+          "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "not_in", "between", "subset", "contains", "not_contains", "approx", "exists", "pattern", "required", "prohibited"]
         },
         "value": {"$ref": "#/$defs/constraintValue"},
         "unit": {"type": ["string", "null"]},
@@ -150,7 +185,7 @@
         "phases": {
           "type": "array",
           "minItems": 1,
-          "items": {"enum": ["live", "file", "bundle"]},
+          "items": {"enum": ["live", "file", "bundle", "manuscript"]},
           "uniqueItems": true
         },
         "source_ids": {
@@ -160,7 +195,53 @@
           "uniqueItems": true
         },
         "description": {"type": "string", "minLength": 1}
+        ,"expression": {"oneOf": [{"$ref": "#/$defs/comparisonExpression"}, {"$ref": "#/$defs/quantifierExpression"}, {"$ref": "#/$defs/aggregateExpression"}, {"$ref": "#/$defs/allExpression"}, {"$ref": "#/$defs/anyExpression"}, {"$ref": "#/$defs/notExpression"}, {"type": "null"}]}
+        ,"supersedes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+        ,"rationale": {"type": ["string", "null"]}
       }
+    },
+    "comparisonExpression": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "probe", "constraint"],
+      "properties": {"kind": {"const": "comparison"}, "probe": {"type": "string"}, "constraint": {"$ref": "#/$defs/constraint"}}
+    },
+    "quantifierExpression": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "quantifier", "probe", "constraint"],
+      "properties": {
+        "kind": {"const": "quantifier"},
+        "quantifier": {"enum": ["all", "any"]},
+        "probe": {"type": "string"},
+        "constraint": {"$ref": "#/$defs/constraint"}
+      }
+    },
+    "aggregateExpression": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "aggregate", "probe", "constraint"],
+      "properties": {
+        "kind": {"const": "aggregate"},
+        "aggregate": {"enum": ["count", "minimum", "maximum"]},
+        "probe": {"type": "string"},
+        "constraint": {"$ref": "#/$defs/constraint"}
+      }
+    },
+    "allExpression": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "expressions"],
+      "properties": {"kind": {"const": "all"}, "expressions": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/expression"}}}
+    },
+    "anyExpression": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "expressions"],
+      "properties": {"kind": {"const": "any"}, "expressions": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/expression"}}}
+    },
+    "notExpression": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "expression"],
+      "properties": {"kind": {"const": "not"}, "expression": {"$ref": "#/$defs/expression"}}
+    },
+    "expression": {
+      "oneOf": [{"$ref": "#/$defs/comparisonExpression"}, {"$ref": "#/$defs/quantifierExpression"}, {"$ref": "#/$defs/aggregateExpression"}, {"$ref": "#/$defs/allExpression"}, {"$ref": "#/$defs/anyExpression"}, {"$ref": "#/$defs/notExpression"}]
     }
   }
 }

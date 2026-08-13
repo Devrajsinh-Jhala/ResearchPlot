@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "acl-2026",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -24,7 +24,11 @@
       "url": "https://github.com/acl-org/acl-style-files/blob/master/formatting.md",
       "locator": "Formatting requirements: paper geometry, typeface, figures, and embedded fonts",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_template",
+      "publisher": "ACL 2026",
+      "archive_url": null,
+      "content_sha256": null
     },
     {
       "id": "acl-2026",
@@ -32,7 +36,11 @@
       "url": "https://2026.aclweb.org/calls/main_conference_papers/",
       "locator": "Main conference paper submission instructions",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "ACL 2026",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -59,7 +67,10 @@
       "source_ids": [
         "acl-format"
       ],
-      "description": "Official ACL column width."
+      "description": "Official ACL column width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.double",
@@ -84,7 +95,10 @@
       "source_ids": [
         "acl-format"
       ],
-      "description": "Full ACL text width across both columns."
+      "description": "Full ACL text width across both columns.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.family",
@@ -108,7 +122,10 @@
       "source_ids": [
         "acl-format"
       ],
-      "description": "ACL text uses Times Roman or a documented substitute."
+      "description": "ACL text uses Times Roman or a documented substitute.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.min",
@@ -128,7 +145,10 @@
       "source_ids": [
         "acl-format"
       ],
-      "description": "Do not set figure labels below the smallest specified manuscript text."
+      "description": "Do not set figure labels below the smallest specified manuscript text.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.target",
@@ -148,7 +168,10 @@
       "source_ids": [
         "acl-format"
       ],
-      "description": "Match the ACL caption and abstract size at final output."
+      "description": "Match the ACL caption and abstract size at final output.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.embedding.required",
@@ -172,7 +195,10 @@
       "source_ids": [
         "acl-format"
       ],
-      "description": "PDFs must embed all necessary fonts."
+      "description": "PDFs must embed all necessary fonts.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.vector",
@@ -199,7 +225,25 @@
       "source_ids": [
         "acl-format"
       ],
-      "description": "Use embedded PDF vector artwork in the proceedings PDF."
+      "description": "Use embedded PDF vector artwork in the proceedings PDF.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

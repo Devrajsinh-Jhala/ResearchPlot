@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Devrajsinh-Jhala/ResearchPlot/v2.0.0/schemas/validation-report.schema.json",
+  "title": "ResearchPlot coverage-aware validation report",
+  "description": "Stable machine-readable schema v2 emitted by PlanAssessment.to_dict().",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile",
+    "profile_digest",
+    "plan_digest",
+    "verdict",
+    "summary",
+    "sources",
+    "findings",
+    "observations",
+    "remediations",
+    "phase_coverage",
+    "coverage",
+    "unresolved_checks",
+    "capability_gaps",
+    "environment_provenance",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "profile": {"type": "string", "minLength": 1},
+    "profile_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "plan_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "verdict": {"enum": ["compliant", "non_compliant", "indeterminate"]},
+    "summary": {"$ref": "#/$defs/summary"},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "observations": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+    "remediations": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "phase_coverage": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/phaseCoverage"},
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "coverage": {"type": "array", "items": {"$ref": "#/$defs/coverage"}},
+    "unresolved_checks": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/unresolved"}
+    },
+    "capability_gaps": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "environment_provenance": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}}
+  },
+  "$defs": {
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["findings", "failures", "warnings", "unresolved"],
+      "properties": {
+        "findings": {"type": "integer", "minimum": 0},
+        "failures": {"type": "integer", "minimum": 0},
+        "warnings": {"type": "integer", "minimum": 0},
+        "unresolved": {"type": "integer", "minimum": 0}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "title", "url", "locator", "retrieved_on", "verified_on",
+        "kind", "publisher", "archive_url", "content_sha256"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "pattern": "^https://"},
+        "locator": {"type": "string", "minLength": 1},
+        "retrieved_on": {"type": "string", "format": "date"},
+        "verified_on": {"type": "string", "format": "date"},
+        "kind": {
+          "enum": [
+            "official_guideline", "official_template", "official_policy",
+            "standard", "archived_copy"
+          ]
+        },
+        "publisher": {"type": ["string", "null"]},
+        "archive_url": {"type": ["string", "null"]},
+        "content_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id", "outcome", "level", "phase", "verification", "message",
+        "observed", "expected", "source_urls", "sources", "artifact", "suggestion"
+      ],
+      "properties": {
+        "rule_id": {"type": "string", "minLength": 1},
+        "outcome": {"enum": ["pass", "fail", "skip"]},
+        "level": {"enum": ["required", "recommended", "inferred"]},
+        "phase": {"enum": ["live", "file", "bundle", "manuscript"]},
+        "verification": {"enum": ["automated", "manual", "unsupported"]},
+        "message": {"type": "string", "minLength": 1},
+        "observed": {},
+        "expected": {},
+        "source_urls": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+        "artifact": {"type": ["string", "null"], "minLength": 1},
+        "suggestion": {"type": ["string", "null"]}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "phase", "artifact", "observed", "expected", "outcome"],
+      "properties": {
+        "rule_id": {"type": "string", "minLength": 1},
+        "phase": {"enum": ["live", "file", "bundle", "manuscript"]},
+        "artifact": {"type": ["string", "null"]},
+        "observed": {},
+        "expected": {},
+        "outcome": {"enum": ["pass", "fail", "skip"]}
+      }
+    },
+    "phaseCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "applicable_required", "satisfied", "failed", "unresolved"],
+      "properties": {
+        "phase": {"enum": ["live", "file", "bundle", "manuscript"]},
+        "applicable_required": {"type": "integer", "minimum": 0},
+        "satisfied": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "unresolved": {"type": "integer", "minimum": 0}
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["figure_id", "deliverable_id", "rule_id", "phases"],
+      "properties": {
+        "figure_id": {"type": "string", "minLength": 1},
+        "deliverable_id": {"type": ["string", "null"]},
+        "rule_id": {"type": "string", "minLength": 1},
+        "phases": {
+          "type": "array",
+          "items": {"enum": ["live", "file", "bundle", "manuscript"]},
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement", "status", "finding"],
+      "properties": {
+        "requirement": {"$ref": "#/$defs/requirement"},
+        "status": {"enum": ["satisfied", "failed", "unresolved", "missing"]},
+        "finding": {"oneOf": [{"$ref": "#/$defs/finding"}, {"type": "null"}]}
+      }
+    },
+    "unresolved": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "figure_id", "deliverable_id", "rule_id", "phases", "status"],
+          "properties": {
+            "kind": {"const": "coverage"},
+            "figure_id": {"type": "string", "minLength": 1},
+            "deliverable_id": {"type": ["string", "null"]},
+            "rule_id": {"type": "string", "minLength": 1},
+            "phases": {
+              "type": "array",
+              "items": {"enum": ["live", "file", "bundle", "manuscript"]},
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "status": {"enum": ["unresolved", "missing"]}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "message"],
+          "properties": {
+            "kind": {"const": "capability"},
+            "message": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["figure_id", "deliverable_id", "report"],
+      "properties": {
+        "figure_id": {"type": "string", "minLength": 1},
+        "deliverable_id": {"type": ["string", "null"]},
+        "report": {
+          "type": "object",
+          "required": ["schema_version", "profile", "verdict", "findings"]
+        }
+      }
+    }
+  }
+}

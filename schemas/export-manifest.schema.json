@@ -265,6 +265,34 @@
         "verified_on": {
           "type": "string",
           "format": "date"
+        },
+        "kind": {
+          "enum": [
+            "official_guideline",
+            "official_template",
+            "official_policy",
+            "standard",
+            "archived_copy"
+          ]
+        },
+        "publisher": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "archive_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "content_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
         }
       },
       "additionalProperties": false

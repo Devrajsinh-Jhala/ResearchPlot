@@ -1,97 +1,96 @@
 # Architecture
 
-ResearchPlot 1.0 separates venue evidence, observation, policy, and artifact writing.
-That boundary makes it possible to add a new rule or file inspector without adding a
-venue-specific branch to every exporter.
+ResearchPlot separates project intent, venue evidence, observations, rule evaluation,
+coverage, policy, and artifact writing. The separation is what lets a saved file be
+useful without pretending it proves facts available only from a live figure or bundle.
 
 ```mermaid
 flowchart TB
-    subgraph Evidence
-        PS["Profile schema v2"]
-        BP["Bundled profiles"]
-        PS --> BP
+    subgraph Intent["Intent and identity"]
+        PS["ProjectSpec schema v3"]
+        LK["Profile lock + digest"]
+        FP["Figure and deliverable graph"]
+        PS --> FP
+        LK --> FP
     end
 
-    subgraph Intent
-        Q["Coordinate or alias"] --> RS["Profile resolver"]
-        M["Role + width + content + format"]
-        RS --> TG["Target"]
-        M --> TG
+    subgraph Evidence["Declarative evidence"]
+        PR["Profile schema v3"]
+        EX["Typed rule expressions"]
+        PD["Typed probe definitions"]
+        PR --> EX
+        PD --> EX
     end
 
-    subgraph Inspection
-        LF["Live Matplotlib figure"] --> LI["Live inspectors"]
-        AF["PDF / SVG / raster / EPS"] --> FI["File inspectors"]
-        LI --> OBS["Typed observations"]
-        FI --> OBS
+    subgraph Observe["Phase observers"]
+        LI["Live Matplotlib"]
+        FI["PDF / SVG / raster / EPS"]
+        BI["Bundle metadata"]
+        MI["Compiled-PDF structure"]
+        LI --> OB["Typed observations"]
+        FI --> OB
+        BI --> OB
+        MI --> OB
     end
 
-    BP --> RS
-    TG --> AR["Applicable rules"]
-    AR --> RE["Generic rule engine"]
-    OBS --> RE
-    RE --> RP["Tri-state report"]
-    RP --> EX["Export policy"]
-    EX --> MN["Manifest + hashes"]
+    FP --> CP["CompliancePlan"]
+    EX --> CP
+    CP --> OB
+    OB --> RE["Generic rule engine"]
+    RE --> CV["Phase coverage"]
+    CV --> VR["Tri-state verdict"]
+    VR --> PO["Policy"]
+    PO --> OUT["Report / export / bundle"]
 ```
 
-## Profiles describe; inspectors observe
+## Project intent is immutable
 
-A profile contains declarative rules. A simplified rule says:
+`ProjectSpec`, `FigureSpec`, `PanelSpec`, `DeliverableSpec`, and `ManuscriptSpec` are
+frozen dataclasses. Loading a schema-v3 TOML file validates structure and rejects
+unknown fields, duplicate stable IDs, incompatible formats, absolute paths, parent
+traversal, and resolved project-root escapes before artifact inspection begins.
+Archive verification separately rejects traversal and symbolic-link entries.
 
-```json
-{
-  "id": "raster.minimum_resolution",
-  "level": "required",
-  "applies_to": {
-    "role": ["main"],
-    "content": ["line-art"],
-    "format": ["tiff"]
-  },
-  "probe": "raster.dpi",
-  "constraint": {
-    "operator": "gte",
-    "value": 600,
-    "unit": "dpi"
-  },
-  "verification": "automated",
-  "source_ids": ["publisher-resolution"]
-}
-```
+`Project` resolves the exact profile and compiles every figure into a `FigurePlan` and
+`ExportPlan`. A plan lists allowed and selected formats separately so an allowed
+alternative is not mistaken for a required companion.
 
-The TIFF inspector does not know about the venue. It reports a typed observation for
-`raster.dpi`. The generic rule engine applies the declared comparison and retains the
-rule's source and strength in the resulting check. If no inspector can establish the
-probe, the check is skipped rather than guessed.
+## Profiles describe; probes observe
 
-## Target is the unit of intent
+A profile rule is data. It names typed observations, units, applicability, evidence
+phases, strength, verification mode, remediation, sources, and caveats. Expressions
+support controlled comparisons and composition; they cannot execute Python, templates,
+or publisher-supplied code.
 
-`target()` resolves a profile once and binds its conditional dimensions:
+An inspector knows file formats, not venues. For example, a raster inspector reports
+pixel dimensions, metadata DPI, color mode, bit depth, and frames. The rule engine
+decides which profile assertions use those observations.
 
-```python
-target = rp.target(
-    "plos-biology@2026.08.0",
-    role="main",
-    width="single",
-    content="combination",
-)
-```
+Profile validation rejects unknown or phase-incompatible probes before a profile can
+participate in a plan. A heuristic observation cannot silently back a required rule.
 
-The target then owns the high-level operations:
+## Coverage precedes the verdict
+
+The same rule can be observable in one or more phases. A coverage requirement records
+the logical figure, optional deliverable, rule ID, and admissible phases. Assessment
+then classifies it as satisfied, failed, unresolved, or missing.
 
 ```mermaid
-flowchart LR
-    T["Target"] --> S["style()"]
-    T --> V["validate(fig)"]
-    T --> A["audit(path)"]
-    T --> E["export(fig, path)"]
+flowchart TD
+    R["Applicable required rule"] --> E{"Compatible evidence exists?"}
+    E -- No --> I["INDETERMINATE"]
+    E -- Yes --> O{"Observed outcome"}
+    O -- Fail --> N["NON_COMPLIANT"]
+    O -- Skip --> I
+    O -- Pass --> M{"Other required coverage?"}
+    M -- Missing --> I
+    M -- Complete --> C["COMPLIANT"]
 ```
 
-This prevents mismatches such as validating for one width and exporting for another.
+A raw `Target.audit()` report remains useful for a single file, but only a compiled
+project plan knows which other phases were required.
 
 ## Style state is local
-
-The style context layers settings in a deterministic order:
 
 ```mermaid
 flowchart LR
@@ -101,37 +100,40 @@ flowchart LR
     C --> R["Original global state restored"]
 ```
 
-Unknown overrides fail as invalid Matplotlib `rcParams`. LaTeX is opt-in and external;
-the default configuration uses installed font fallbacks and never downloads a font.
+Unknown rcParams fail explicitly. LaTeX is external and opt-in; no font or template is
+downloaded by the style context.
 
-## Export is a transaction
+## Export and bundle boundaries
 
-`Target.export()` writes into a private staging directory, audits each candidate file,
-evaluates the selected policy, writes its evidence, and then moves approved files into
-place. Handled commit failures trigger rollback. Because multiple destinations are
-replaced sequentially, abrupt process termination and non-cooperating concurrent writers
-remain outside the transaction guarantee.
+Figure export writes into private staging, inspects each candidate, evaluates policy,
+and commits approved files. Handled commit failures trigger rollback. Multiple final
+paths are still replaced sequentially, so abrupt termination or a non-cooperating
+writer can interrupt a multi-file commit.
 
-The returned `ExportResult` links paths, report, and manifest. It is intentionally more
-explicit than the `0.2` list of paths.
-
-## Offline and deterministic by design
-
-Profile discovery reads bundled package data. It performs no runtime HTTP request and
-never modifies a published profile. A scheduled
-repository workflow may report stale links to maintainers, but it does not rewrite
-rules automatically.
-
-An exact coordinate plus profile digest allows the same evidence to be reconstructed
-from the installed package. Manifests additionally record the ResearchPlot version,
-full source metadata and caveats, and SHA-256 hashes for every output artifact.
+`Project.bundle()` currently bridges schema-v3 project intent into the v1 submission
+directory/manifest implementation. It refuses structures the bridge cannot represent,
+including generic attachments and multiple source-data files per figure. Deterministic
+ZIP creation subsequently verifies the manifest and uses stable entry ordering,
+timestamps, and permissions.
 
 ## Trust boundaries
 
-ResearchPlot parses files supplied by the caller. Inspectors avoid executing embedded
-content, loading external SVG resources, invoking LaTeX by default, or treating a
-metadata field as proof of an unobservable visual property. Malformed and unsupported
-files produce explicit input or capability errors.
+```mermaid
+flowchart LR
+    NET["Network"] -->|"only explicit profile sync"| REG["TUF client"]
+    REG --> CACHE["Verified cache"]
+    CACHE --> LOCK["Exact lock + digest"]
+    LOCK --> RUN["Offline plan/check/export"]
 
-Scientific correctness, image manipulation, and venue acceptance remain outside the
-system boundary. See [Limitations and non-goals](limitations.md).
+    FILE["Untrusted artifact"] --> WORKER["Bounded subprocess inspector"]
+    WORKER --> OBS["Passive observations"]
+    OBS --> REPORT["Finding; active content never executed"]
+```
+
+The browser server binds only to loopback and applies a session token, origin checks,
+upload limits, a restrictive content-security policy, and temporary-file cleanup. It
+is a local preflight interface, not a hosted upload service.
+
+No parser should be treated as a perfect sandbox. Use least privilege and the isolated
+inspection API for untrusted inputs. Scientific correctness, manipulation detection,
+and venue acceptance sit outside the system boundary.

@@ -1,35 +1,36 @@
 # Profiles and provenance
 
-A profile is a versioned, immutable package of venue evidence. It contains aliases,
-venue kind and year, applicable figure roles, physical widths, typography and export
-constraints, official sources, verification dates, caveats, and a digest.
+A profile is an immutable set of venue evidence. It combines identity, scope, width
+options, declarative rules, source records, caveats, and a digest; it does not contain
+venue-specific executable code.
 
-## Coordinates and resolution
+## Coordinates and digests
 
-The reproducible form is:
+The reproducible coordinate is:
 
 ```text
 <profile-id>@<revision>
 ```
 
-Examples:
+Examples bundled in 2.0 include:
 
 ```text
 nature@2026.08.0
-ieee-journal@2026.08.0
 cvpr-2026@2026.08.0
+elsevier-generic@2026.08.0
 ```
 
-The revision identifies the packaged evidence, not the venue's publication year. A
-year-pinned conference ID and a profile revision serve different purposes.
+The profile revision identifies the packaged evidence. It is different from a
+conference year in the profile ID. A SHA-256 digest additionally covers the canonical
+profile document.
 
-Resolution follows these rules:
+Resolution rules are deterministic:
 
-1. An exact coordinate wins and is reproducible.
-2. An unpinned exact ID or alias resolves to the current installed revision and warns.
-3. A bare conference alias resolves to the newest bundled verified year and warns with
-   its exact coordinate.
-4. Ambiguous and unknown queries fail with close matches; they never become IEEE.
+1. An exact coordinate wins.
+2. An exact installed ID or alias resolves to its installed revision and warns.
+3. A bare conference alias resolves only among installed profiles and warns with the
+   selected coordinate.
+4. Ambiguous or unknown input fails with close matches; it never falls back to IEEE.
 
 ```python
 import researchplot as rp
@@ -37,147 +38,127 @@ import researchplot as rp
 profile = rp.resolve_profile("nature@2026.08.0")
 print(profile.coordinate)
 print(profile.digest)
+print(profile.status)
 print(profile.sources)
-
-for profile in rp.list_profiles():
-    print(profile.coordinate)
 ```
 
-The 0.2 `resolve_venue()` and `list_venues()` top-level names are not part of the 1.0
-public API; use profile terminology.
+## Discover the installed catalog
 
-## Initial catalog
-
-All initial built-in profiles use revision `2026.08.0`.
-
-| Profile ID | Scope | Key official source |
-| --- | --- | --- |
-| `ieee-journal` | General IEEE journal graphics | [IEEE Author Center](https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/resolution-and-size/) |
-| `nature` | Flagship Nature main and related figure roles | [Nature Research Figure Guide](https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/) |
-| `elsevier-generic` | Generic Elsevier artwork; a journal may override it | [Elsevier artwork sizing](https://www.elsevier.com/en-au/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing) |
-| `neurips-2026` | NeurIPS 2026 proceedings template | [Official formatting package](https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip) |
-| `icml-2026` | ICML 2026 proceedings | [ICML author instructions](https://icml.cc/Conferences/2026/AuthorInstructions) |
-| `cvpr-2026` | CVPR 2026 proceedings | [CVPR author guidelines](https://cvpr.thecvf.com/Conferences/2026/AuthorGuidelines) |
-| `acl-2026` | ACL 2026 proceedings | [ACL formatting requirements](https://github.com/acl-org/acl-style-files/blob/master/formatting.md) |
-| `plos-biology` | PLOS Biology figure files and submission metadata | [PLOS figure requirements](https://journals.plos.org/plosbiology/s/figures) |
-| `acm-acmart` | Bundle-only ACM `acmart` figure descriptions; physical widths are intentionally unspecified | [ACM submission template](https://www.acm.org/binaries/content/assets/publications/taps/acm_layout_submission_template.pdf) |
-
-This table is a discovery aid, not the source of truth. Run `profile show` to see the
-exact URLs, section or page locators, rule levels, and caveats installed with your
-package:
+ResearchPlot 2.0 ships 22 bundled profiles. The release documentation generator turns
+the bundled data into evidence pages; the installed CLI remains the source of truth for
+the exact profiles, rules, and revisions in your environment:
 
 ```bash
+researchplot profile list
+researchplot profile list --kind conference
+researchplot profile search vision
 researchplot profile show nature@2026.08.0
 researchplot profile show nature@2026.08.0 --json
 ```
 
-### Named physical widths
+[Browse the generated profile evidence catalog](generated/profiles/index.md){ .md-button .md-button--primary }
 
-| Profile | Width names and millimetres |
+The launch catalog includes journal, conference, and generic publisher evidence. A
+generic publisher profile says exactly that: an individual journal can override it,
+and ResearchPlot does not present generic guidance as journal-specific compliance.
+Profiles awaiting sufficient official evidence should be `draft`, and missing rules
+stay absent rather than inferred.
+
+| Kind | Bundled profile IDs |
 | --- | --- |
-| `ieee-journal` | `single` 88.9; `double` 181.864 |
-| `nature` | `single` 89; `double` 183 |
-| `elsevier-generic` | `minimal` 30; `single` 90; `one-and-half` 140; `double` 190 |
-| `neurips-2026` | `full` 139.7 |
-| `icml-2026` | `single` 82.55; `double` 171.45 |
-| `cvpr-2026` | `single` 83.34375; `double` 174.625 |
-| `acl-2026` | `single` 77; `double` 160 |
-| `plos-biology` | `text-column` 132; `full` 190.5; allowed main-figure range 66.8–190.5 |
-| `acm-acmart` | No generic physical width; bundle metadata only |
+| Journals | `ieee-journal`, `jacs`, `jmlr`, `nature`, `physical-review-letters`, `plos-biology`, `tmlr` |
+| Conferences | `aaai-2026`, `acl-2026`, `aistats-2026`, `colm-2026`, `cvpr-2026`, `eccv-2026`, `iclr-2026`, `icml-2026`, `neurips-2026`, `usenix-osdi-2026` |
+| Publisher/generic or narrow publisher guidance | `aas-journals`, `acm-acmart`, `acs-generic`, `cell-graphical-abstract`, `elsevier-generic` |
 
-Values are final physical widths. Rule level can differ: for example, PLOS Biology's
-132 mm text-column width is recommended while its allowed range and full width carry
-their own constraints. Inspect the profile rather than treating this table as a complete
-rule set.
+Several new profiles are intentionally narrow—for example, a font-technology rule or
+graphical-abstract-only scope. A `verified` status verifies the encoded evidence; it
+does not imply that a one-rule profile covers the whole venue.
 
-`acm-acmart` is intentionally bundle-only: ACM publication variants have different
-page geometries, so the generic profile validates description metadata but cannot
-create a venue-sized style. Combine its requirements with the specific conference or
-journal instructions when preparing the figure itself.
+## Schema v3
 
-```python
-submission = rp.Submission("acm-acmart@2026.08.0", output_dir="acm-bundle")
-submission.add(
-    "figure1.pdf",
-    "figures/figure1.pdf",
-    alt_text="A line chart showing error decreasing as the sample size grows.",
-    attestations={
-        "metadata.alt_text.distinct_from_caption": (
-            "The description conveys the trend that is not stated in the caption."
-        )
-    },
-)
-bundle = submission.build()
-```
+Profile schema v3 supports:
 
-## Profile contents
+- `id`, immutable revision, aliases, venue kind/year, status, scope, maintainers, and
+  optional review/governance records;
+- named physical widths and a default width;
+- required, recommended, and inferred rules with applicability and evidence phases;
+- typed probes, unit-safe constraints, declarative expressions, and verification mode;
+- official sources with title, URL, section/page locator, retrieval and verification
+  dates, optional archived URL, and optional content fingerprint;
+- caveats, inheritance/composition metadata, and revision history.
 
-Profiles conform to the bundled
-[`profile.schema.json`](profile-schema.md) using JSON Schema 2020-12. The v2 model
-includes:
+Not every official page exposes every provenance field. Optional values such as a
+source content fingerprint remain `null` when they were not established.
 
-- immutable `id`, `revision`, and computed SHA-256 digest;
-- effective and optional retirement dates;
-- venue type, year, aliases, scope, and caveats;
-- named figure widths and default target metadata;
-- rules with applicability, probe, constraint, level, and verification mode;
-- source records with URL, title, locator, and verification date.
+Expressions are data. They can perform supported comparisons and composition but
+cannot import Python, interpolate templates, access the network, or execute a publisher
+file. Profile validation checks probe/operator/unit/phase compatibility before use.
 
-Rules are data, not venue-specific Python branches. This lets the same inspector
-evaluate a PDF rule from a bundled profile or an independently installed pack.
+See [Profile schema](profile-schema.md) for authoring details.
 
-## Provenance and freshness
+## Rule provenance
 
-ResearchPlot distinguishes four dates:
+A report can connect a finding to:
 
-- the venue year, where relevant;
-- the official source's effective date, when stated;
-- the date maintainers verified the source;
-- the immutable ResearchPlot profile revision.
+- exact profile coordinate and digest;
+- rule ID, level, applicability, phase, probe, constraint, and verification mode;
+- official source ID, URL, locator, dates, and any interpretation/rationale;
+- profile scope and caveats.
 
-Publisher profiles older than the configured freshness threshold warn. A stale warning
-does not modify the profile, access the network, or assert that the guidance changed.
-Year-pinned conference profiles remain immutable even after a later conference appears.
-
-Source URLs are exposed in findings; `profile show` exposes the complete source records
-and locators. If a publisher page disappears, the profile remains resolvable but
-maintainers can release a new revision with repaired provenance. Published revisions
-are never edited in place.
+Inspect those records before treating a check as authoritative. A verified profile
+means its encoded evidence passed project governance; it does not guarantee that the
+venue has no other requirements.
 
 ## Profile locks
 
-A project lock captures the coordinates and digests used by a configuration:
+Write and commit a lock beside the project configuration:
 
 ```bash
-researchplot profile lock nature@2026.08.0
+researchplot profile lock nature@2026.08.0 --output researchplot.lock.json
 ```
 
-Commit the generated lock with the paper. It is a deterministic evidence snapshot for
-review and external verification. The 1.0 `check` command does not consume it
-automatically, so CI should also pin the package version.
+The lock records schema version, coordinate, profile digest, document digest, and
+available source-content digests. A frozen plan verifies it before artifact parsing:
 
-Compare revisions before updating:
+```python
+project = rp.Project.load("researchplot.toml")
+plan = project.plan(frozen=True)
+report = plan.check()
+```
+
+A lock does not copy an entire official web page and does not prove that a URL remains
+online. It establishes the exact installed evidence used for a run.
+
+## Compare and validate
 
 ```bash
 researchplot profile diff nature@2026.08.0 ieee-journal@2026.08.0
+researchplot profile validate path/to/profile.json
 ```
 
-## Validate proposed profile data
+`diff` compares immutable rule documents. Review required-rule changes separately from
+recommendation or evidence-only updates when deciding whether to adopt a new revision.
 
-Maintainers and profile authors can validate a local schema-v2 JSON file before it is
-bundled:
+## Signed registry
 
-```bash
-researchplot profile validate path/to/my-profile.json
-```
+The optional registry client uses The Update Framework (TUF). It requires an explicit
+repository URL, trusted root, and cache location; it fails closed if the dependency or
+trust material is missing.
 
-The 1.0 registry also discovers installed, offline profile packs through the
-`researchplot.profiles` Python entry-point group. See [Profile schema](profile-schema.md)
-for the pack contract and [Contributing](contributing.md) before proposing a built-in
-profile.
+Normal profile resolution, checking, styling, export, bundle operations, and the local
+workspace never sync. Only an explicit sync operation may contact a configured
+registry. Downloaded profiles remain data-only and locks prevent silent changes.
 
-## Legacy styles are not profiles
+ResearchPlot ships the client machinery, but the public registry's production URL,
+root keys, rotation ceremony, publication approvals, and availability are operational
+deployment concerns. See [Signed profile registry](profile-registry.md).
 
-The old `science`, `cell`, `springer`, and `pnas` styling labels are intentionally not
-promoted to verified profiles. They remain available only by pinning the frozen 0.2.1
-package in a separate environment; they do not claim venue compliance.
+## Third-party and legacy profiles
+
+Unsigned local JSON is useful for authoring, but must be labeled unverified and should
+not enter frozen CI without an explicit trust decision. Legacy executable
+`researchplot.profiles` entry points are disabled by default because importing a Python
+plugin crosses a different security boundary and could shadow trusted data.
+
+The schema-v2 translator remains available throughout 2.x for migration. New profiles
+should target v3 directly.

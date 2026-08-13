@@ -1,5 +1,5 @@
 site_name: ResearchPlot
-site_description: Source-backed venue compliance, artifact auditing, and submission bundles for research figures.
+site_description: Local, source-backed venue compliance and artifact preflight for research figures.
 site_url: https://devrajsinh-jhala.github.io/ResearchPlot/
 repo_url: https://github.com/Devrajsinh-Jhala/ResearchPlot
 repo_name: Devrajsinh-Jhala/ResearchPlot
@@ -38,6 +38,8 @@ extra_css:
 
 nav:
   - Home: index.md
+  - ResearchPlot 2.0: v2.md
+  - ResearchPlot 1.x compatibility: v1.md
   - Getting started: getting-started.md
   - Concepts:
       - Architecture: architecture.md
@@ -48,13 +50,18 @@ nav:
       - Project configuration: configuration.md
       - Export and submission bundles: bundles.md
       - Command line: cli.md
+      - Local browser workspace: local-web.md
+      - Compiled manuscript audit: manuscript.md
+      - Interoperability: interoperability.md
       - Gallery: gallery.md
   - Reference:
       - Python API: api.md
       - Profile schema: profile-schema.md
+      - Profile evidence catalog: generated/profiles/index.md
+      - Signed profile registry: profile-registry.md
       - Manifest and report formats: formats.md
       - Limitations and non-goals: limitations.md
-  - Migrate from 0.2: migration.md
+  - Migrate to 2.0: migration.md
   - Contributing: contributing.md
   - Changelog: changelog.md
 

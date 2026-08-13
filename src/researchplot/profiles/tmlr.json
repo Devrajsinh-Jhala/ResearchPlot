@@ -1,0 +1,147 @@
+{
+  "schema_version": 3,
+  "id": "tmlr",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "Transactions on Machine Learning Research",
+  "kind": "journal",
+  "year": null,
+  "aliases": [
+    "transactions on machine learning research"
+  ],
+  "scope": "TMLR paper figures under the mandatory official template.",
+  "default_width": "full",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The template does not state a numeric minimum font size specifically for figures."
+  ],
+  "sources": [
+    {
+      "id": "tmlr-author-guide",
+      "title": "TMLR guidelines for authors",
+      "url": "https://jmlr.org/tmlr/author-guide.html",
+      "locator": "Mandatory PDF and LaTeX template",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "TMLR guidelines for authors",
+      "archive_url": null,
+      "content_sha256": null
+    },
+    {
+      "id": "tmlr-template",
+      "title": "Official TMLR style file and template",
+      "url": "https://github.com/JmlrOrg/tmlr-style-file",
+      "locator": "6.5 x 9 inch text block and figure guidance",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_template",
+      "publisher": "Official TMLR style file and template",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.full",
+      "level": "inferred",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 165.1,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "tmlr-template"
+      ],
+      "description": "The mandatory template text width is 6.5 inches.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "The full-width target is the template text width."
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "inferred",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 228.6,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "tmlr-template"
+      ],
+      "description": "Figures must fit within the 9-inch text block.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "accessibility.non_color_distinctions",
+      "level": "recommended",
+      "probe": "color.non_color_distinctions",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "tmlr-template"
+      ],
+      "description": "Captions and body text should make sense in black and white or color.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

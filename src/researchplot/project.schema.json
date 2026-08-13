@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devrajsinh-jhala.github.io/ResearchPlot/schemas/project-v3.schema.json",
+  "title": "ResearchPlot project specification",
+  "description": "Strict schema-v3 project intent for reproducible figure compliance planning.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile", "figures"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "profile": {
+      "type": "string",
+      "pattern": "^(?:[a-z0-9][a-z0-9._-]*/)?[a-z0-9]+(?:-[a-z0-9]+)*@[0-9]{4}\\.[0-9]{2}\\.[0-9]+(?:#sha256:[0-9a-f]{64})?$"
+    },
+    "policy": {"enum": ["off", "violations", "complete"]},
+    "lock": {"type": "string", "minLength": 1},
+    "metadata": {"type": "object"},
+    "manuscript": {"$ref": "#/$defs/manuscript"},
+    "figures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/figure"}
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[a-z0-9_-]*[a-z0-9])?$"
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewer", "date", "rationale", "evidence"],
+      "properties": {
+        "reviewer": {"type": "string", "minLength": 1},
+        "date": {"type": "string", "format": "date"},
+        "rationale": {"type": "string", "minLength": 1},
+        "evidence": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "waiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_digest", "reviewer", "reason", "expires_on"],
+      "properties": {
+        "profile_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "reviewer": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1},
+        "expires_on": {"type": "string", "format": "date"}
+      }
+    },
+    "attestations": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9_]+(?:\\.[a-z0-9_-]+)+$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {"type": "string", "minLength": 1, "deprecated": true},
+          {"$ref": "#/$defs/attestation"}
+        ]
+      }
+    },
+    "waivers": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9_]+(?:\\.[a-z0-9_-]+)+$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {"type": "string", "minLength": 1, "deprecated": true},
+          {"$ref": "#/$defs/waiver"}
+        ]
+      }
+    },
+    "number": {
+      "oneOf": [
+        {"type": "integer", "minimum": 1},
+        {"type": "string", "minLength": 1}
+      ]
+    },
+    "pathList": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      ]
+    },
+    "deliverable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "format"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "format": {"enum": ["pdf", "eps", "svg", "png", "jpeg", "jpg", "tiff", "tif"]},
+        "path": {"type": "string", "minLength": 1},
+        "required": {"type": "boolean"},
+        "preferred": {"type": "boolean"},
+        "metadata": {"type": "object"}
+      }
+    },
+    "panel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "label": {"type": "string", "minLength": 1},
+        "order": {"type": "integer", "minimum": 1},
+        "description": {"type": "string", "minLength": 1},
+        "alt_text": {"type": "string", "minLength": 1},
+        "long_description": {"type": "string", "minLength": 1},
+        "source_data": {"$ref": "#/$defs/pathList"},
+        "metadata": {"type": "object"}
+      }
+    },
+    "figure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "deliverables"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "role": {"enum": ["main", "extended_data", "supplementary", "graphical_abstract"]},
+        "width": {"type": "string", "minLength": 1},
+        "content": {"enum": ["data_visualization", "line_art", "halftone", "photograph", "combination"]},
+        "number": {"$ref": "#/$defs/number"},
+        "caption": {"type": "string", "minLength": 1},
+        "alt_text": {"type": "string", "minLength": 1},
+        "long_description": {"type": "string", "minLength": 1},
+        "key_trends": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "panels": {"type": "array", "items": {"$ref": "#/$defs/panel"}},
+        "source_data": {"$ref": "#/$defs/pathList"},
+        "data_table": {"type": "string", "minLength": 1},
+        "attachments": {"$ref": "#/$defs/pathList"},
+        "attestations": {"$ref": "#/$defs/attestations"},
+        "waivers": {"$ref": "#/$defs/waivers"},
+        "metadata": {"type": "object"},
+        "deliverables": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/deliverable"}
+        }
+      }
+    },
+    "matchingHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["figure"],
+      "anyOf": [
+        {"required": ["pages"]},
+        {"required": ["number"]},
+        {"required": ["caption"]}
+      ],
+      "properties": {
+        "figure": {"$ref": "#/$defs/id"},
+        "pages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "number": {"$ref": "#/$defs/number"},
+        "caption": {"type": "string", "minLength": 1}
+      }
+    },
+    "manuscript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "format"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "format": {"enum": ["pdf", "latex", "docx"]},
+        "required": {"type": "boolean"},
+        "matching_hints": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/matchingHint"}
+        },
+        "metadata": {"type": "object"}
+      }
+    }
+  }
+}

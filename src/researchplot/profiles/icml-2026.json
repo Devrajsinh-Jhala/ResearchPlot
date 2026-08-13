@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "icml-2026",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -21,7 +21,11 @@
       "url": "https://icml.cc/Conferences/2026/AuthorInstructions",
       "locator": "Author instructions: figures and paper preparation",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "ICML 2026",
+      "archive_url": null,
+      "content_sha256": null
     },
     {
       "id": "icml-template",
@@ -29,7 +33,11 @@
       "url": "https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip",
       "locator": "ICML 2026 LaTeX style: page geometry and typography",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "ICML 2026",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -56,7 +64,10 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "ICML single-column width derived from text width and column gap."
+      "description": "ICML single-column width derived from text width and column gap.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.double",
@@ -81,7 +92,10 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "ICML full two-column text width."
+      "description": "ICML full two-column text width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.family",
@@ -105,7 +119,10 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "Papers use 10-point Times."
+      "description": "Papers use 10-point Times.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.min",
@@ -125,7 +142,10 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "Avoid labels smaller than template secondary text."
+      "description": "Avoid labels smaller than template secondary text.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.target",
@@ -145,7 +165,10 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "Match the body font at final size."
+      "description": "Match the body font at final size.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.title.prohibited",
@@ -165,7 +188,10 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "The author instructions say not to place a title inside the figure."
+      "description": "The author instructions say not to place a title inside the figure.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.type3.prohibited",
@@ -189,7 +215,10 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "The PDF must avoid Type 3 fonts."
+      "description": "The PDF must avoid Type 3 fonts.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.vector",
@@ -217,7 +246,25 @@
       "source_ids": [
         "icml-template"
       ],
-      "description": "Use embedded vector artwork where possible."
+      "description": "Use embedded vector artwork where possible.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

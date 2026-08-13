@@ -1,0 +1,149 @@
+{
+  "schema_version": 3,
+  "id": "aistats-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "Artificial Intelligence and Statistics 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": [
+    "aistats",
+    "aistats 2026"
+  ],
+  "scope": "AISTATS 2026 proceedings figures.",
+  "default_width": "single",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The template requires legible artwork but does not state a numeric figure-font minimum."
+  ],
+  "sources": [
+    {
+      "id": "aistats-call",
+      "title": "AISTATS 2026 Call for Papers",
+      "url": "https://virtual.aistats.org/Conferences/2026/CallForPapers",
+      "locator": "Mandatory official paper pack",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "AISTATS 2026 Call for Papers",
+      "archive_url": null,
+      "content_sha256": null
+    },
+    {
+      "id": "aistats-2026-template",
+      "title": "AISTATS 2026 paper pack",
+      "url": "https://aistats.org/aistats2026/AISTATS2026PaperPack.zip",
+      "locator": "3.25/6.75-inch columns and 9.25-inch text height",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_template",
+      "publisher": "AISTATS 2026 paper pack",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.single",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 82.55,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "aistats-2026-template"
+      ],
+      "description": "A single column is 3.25 inches wide.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.width.double",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 171.45,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "aistats-2026-template"
+      ],
+      "description": "The two-column text block is 6.75 inches wide.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "inferred",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 234.95,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "aistats-2026-template"
+      ],
+      "description": "Figures must fit within the 9.25-inch text block.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "Maximum usable height is derived from the template text height."
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

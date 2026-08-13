@@ -18,16 +18,29 @@ from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlsplit
 
+from .composition import resolve_composition
+from .governance import require_governance
 from .models import (
+    AggregateExpression,
+    AllExpression,
+    AnyExpression,
     ConstraintOperator,
     ContentKind,
     FigureRole,
+    NotExpression,
     OutputFormat,
+    ProbeExpression,
+    ProfileCoordinate,
+    ProfileGovernance,
+    ProfileStatus,
+    QuantifierExpression,
     RuleApplicability,
     RuleConstraint,
+    RuleExpression,
     RuleLevel,
     RulePhase,
     RuleValue,
+    SourceKind,
     SourceRef,
     VenueKind,
     VenueProfile,
@@ -35,6 +48,7 @@ from .models import (
     VenueRule,
     VerificationMode,
 )
+from .probes import validate_probe_constraint
 
 _PROFILE_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _PROFILE_REVISION = re.compile(r"^[0-9]{4}\.[0-9]{2}\.[0-9]+$")
@@ -142,9 +156,12 @@ def _reject_json_constant(value: str) -> None:
     raise ValueError(f"JSON numeric value {value!r} is not finite.")
 
 
-@lru_cache(maxsize=1)
-def _load_profile_schema() -> dict[str, Any]:
-    resource = files("researchplot").joinpath("profile.schema.json")
+@lru_cache(maxsize=2)
+def _load_profile_schema(version: int = 3) -> dict[str, Any]:
+    if version not in {2, 3}:
+        raise ValueError("Profile schema version must be 2 or 3.")
+    resource_name = "profile.schema.json" if version == 3 else "profile-v2.schema.json"
+    resource = files("researchplot").joinpath(resource_name)
     try:
         schema = json.loads(
             resource.read_text(encoding="utf-8"), parse_constant=_reject_json_constant
@@ -154,10 +171,52 @@ def _load_profile_schema() -> dict[str, Any]:
     return _expect_mapping(schema, "profile.schema.json")
 
 
-def profile_schema() -> dict[str, Any]:
+def profile_schema(version: int = 3) -> dict[str, Any]:
     """Return a copy of the bundled JSON Schema (no network access required)."""
 
-    return copy.deepcopy(_load_profile_schema())
+    return copy.deepcopy(_load_profile_schema(version))
+
+
+def translate_v2_profile(payload: Mapping[str, object]) -> dict[str, Any]:
+    """Translate a validated-shape schema-v2 document to schema v3.
+
+    Translation preserves every v2 rule verbatim and marks the result as
+    ``translated`` because v2 did not carry maintainership or review evidence.
+    The returned mapping can be inspected, serialized, or passed to
+    :func:`validate_profile_data`.
+    """
+
+    data = copy.deepcopy(dict(payload))
+    if data.get("schema_version") != 2:
+        raise ValueError("Only schema-version 2 profiles can be translated.")
+    data["schema_version"] = 3
+    data["namespace"] = "researchplot"
+    data["status"] = "translated"
+    data["license"] = "MIT"
+    data["maintainers"] = []
+    data["extends"] = []
+    data["governance"] = {
+        "policy": "researchplot-v2-translation",
+        "reviewers": [],
+        "reviewed_on": None,
+        "change_note": "Automatically translated from schema v2; evidence governance is incomplete.",
+    }
+    raw_sources = data.get("sources", [])
+    if isinstance(raw_sources, list):
+        for source in raw_sources:
+            if isinstance(source, dict):
+                source.setdefault("kind", "official_guideline")
+                source.setdefault("publisher", None)
+                source.setdefault("archive_url", None)
+                source.setdefault("content_sha256", None)
+    raw_rules = data.get("rules", [])
+    if isinstance(raw_rules, list):
+        for rule in raw_rules:
+            if isinstance(rule, dict):
+                rule.setdefault("expression", None)
+                rule.setdefault("supersedes", [])
+                rule.setdefault("rationale", None)
+    return data
 
 
 def _validate_schema_envelope(data: dict[str, Any], filename: str) -> None:
@@ -169,15 +228,16 @@ def _validate_schema_envelope(data: dict[str, Any], filename: str) -> None:
     Schema cannot express.
     """
 
-    schema = _load_profile_schema()
+    schema_version = data.get("schema_version")
+    if schema_version not in {2, 3}:
+        raise ValueError(f"{filename} uses an unsupported profile schema; expected version 2 or 3.")
+    schema = _load_profile_schema(cast(int, schema_version))
     required = set(cast(list[str], schema["required"]))
     missing = required - set(data)
     if missing:
         raise ValueError(f"{filename} is missing required fields: {', '.join(sorted(missing))}.")
     allowed = set(cast(dict[str, Any], schema["properties"]))
     _reject_unknown_keys(data, allowed=allowed, label=filename)
-    if data.get("schema_version") != 2:
-        raise ValueError(f"{filename} uses an unsupported profile schema; expected version 2.")
 
 
 def _parse_source(raw_source: object, filename: str, index: int) -> SourceRef:
@@ -185,7 +245,18 @@ def _parse_source(raw_source: object, filename: str, index: int) -> SourceRef:
     source = _expect_mapping(raw_source, label)
     _reject_unknown_keys(
         source,
-        allowed={"id", "title", "url", "locator", "retrieved_on", "verified_on"},
+        allowed={
+            "id",
+            "title",
+            "url",
+            "locator",
+            "retrieved_on",
+            "verified_on",
+            "kind",
+            "publisher",
+            "archive_url",
+            "content_sha256",
+        },
         label=label,
     )
     url = _expect_string(source.get("url"), f"{label}.url")
@@ -197,6 +268,24 @@ def _parse_source(raw_source: object, filename: str, index: int) -> SourceRef:
         or parsed_url.password is not None
     ):
         raise ValueError(f"{label}.url must use HTTPS.")
+    archive_url = source.get("archive_url")
+    if archive_url is not None:
+        archive_url = _expect_string(archive_url, f"{label}.archive_url")
+        archive_parts = urlsplit(archive_url)
+        if archive_parts.scheme.casefold() != "https" or not archive_parts.hostname:
+            raise ValueError(f"{label}.archive_url must use HTTPS.")
+    content_sha256 = source.get("content_sha256")
+    if content_sha256 is not None and (
+        not isinstance(content_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", content_sha256)
+    ):
+        raise ValueError(f"{label}.content_sha256 must be a lowercase SHA-256 digest or null.")
+    try:
+        source_kind = SourceKind(source.get("kind", "official_guideline"))
+    except ValueError as exc:
+        raise ValueError(f"{label}.kind is not supported.") from exc
+    publisher = source.get("publisher")
+    if publisher is not None:
+        publisher = _expect_string(publisher, f"{label}.publisher")
     return SourceRef(
         id=_expect_string(source.get("id"), f"{label}.id"),
         title=_expect_string(source.get("title"), f"{label}.title"),
@@ -210,6 +299,10 @@ def _parse_source(raw_source: object, filename: str, index: int) -> SourceRef:
             _expect_string(source.get("verified_on"), f"{label}.verified_on"),
             f"{label}.verified_on",
         ),
+        kind=source_kind,
+        publisher=publisher,
+        archive_url=archive_url,
+        content_sha256=content_sha256,
     )
 
 
@@ -253,6 +346,15 @@ def _parse_constraint(raw_constraint: object, label: str) -> RuleConstraint:
         bounds = cast(tuple[float, float], value)
         if bounds[0] > bounds[1]:
             raise ValueError(f"{label}.between lower bound must not exceed its upper bound.")
+    if operator is ConstraintOperator.EXISTS and not isinstance(value, bool):
+        raise ValueError(f"{label}.exists requires a boolean value.")
+    if operator is ConstraintOperator.PATTERN:
+        if not isinstance(value, str) or len(value) > 256:
+            raise ValueError(f"{label}.pattern requires a string of at most 256 characters.")
+        try:
+            re.compile(value)
+        except re.error as exc:
+            raise ValueError(f"{label}.pattern is not a valid regular expression: {exc}") from exc
     if operator is not ConstraintOperator.APPROX and tolerance is not None:
         raise ValueError(f"{label}.tolerance is only valid with the approx operator.")
     return RuleConstraint(
@@ -295,6 +397,117 @@ def _parse_applicability(raw: object, label: str) -> RuleApplicability:
     )
 
 
+def _parse_expression(raw: object, label: str, *, depth: int = 0) -> RuleExpression:
+    if depth > 8:
+        raise ValueError(f"{label} exceeds the maximum expression depth of 8.")
+    expression = _expect_mapping(raw, label)
+    kind = _expect_string(expression.get("kind"), f"{label}.kind")
+    if kind == "comparison":
+        _reject_unknown_keys(expression, allowed={"kind", "probe", "constraint"}, label=label)
+        probe = _expect_string(expression.get("probe"), f"{label}.probe")
+        if not _PROBE_ID.fullmatch(probe):
+            raise ValueError(f"{label}.probe is not a valid dotted probe identifier.")
+        return ProbeExpression(
+            probe, _parse_constraint(expression.get("constraint"), f"{label}.constraint")
+        )
+    if kind == "quantifier":
+        _reject_unknown_keys(
+            expression,
+            allowed={"kind", "quantifier", "probe", "constraint"},
+            label=label,
+        )
+        quantifier = _expect_string(expression.get("quantifier"), f"{label}.quantifier")
+        probe = _expect_string(expression.get("probe"), f"{label}.probe")
+        if not _PROBE_ID.fullmatch(probe):
+            raise ValueError(f"{label}.probe is not a valid dotted probe identifier.")
+        return QuantifierExpression(
+            quantifier,
+            probe,
+            _parse_constraint(expression.get("constraint"), f"{label}.constraint"),
+        )
+    if kind == "aggregate":
+        _reject_unknown_keys(
+            expression,
+            allowed={"kind", "aggregate", "probe", "constraint"},
+            label=label,
+        )
+        aggregate = _expect_string(expression.get("aggregate"), f"{label}.aggregate")
+        probe = _expect_string(expression.get("probe"), f"{label}.probe")
+        if not _PROBE_ID.fullmatch(probe):
+            raise ValueError(f"{label}.probe is not a valid dotted probe identifier.")
+        return AggregateExpression(
+            aggregate,
+            probe,
+            _parse_constraint(expression.get("constraint"), f"{label}.constraint"),
+        )
+    if kind in {"all", "any"}:
+        _reject_unknown_keys(expression, allowed={"kind", "expressions"}, label=label)
+        children = expression.get("expressions")
+        if not isinstance(children, list) or not children or len(children) > 32:
+            raise ValueError(f"{label}.expressions must contain between 1 and 32 expressions.")
+        parsed = tuple(
+            _parse_expression(child, f"{label}.expressions[{index}]", depth=depth + 1)
+            for index, child in enumerate(children)
+        )
+        return AllExpression(parsed) if kind == "all" else AnyExpression(parsed)
+    if kind == "not":
+        _reject_unknown_keys(expression, allowed={"kind", "expression"}, label=label)
+        return NotExpression(
+            _parse_expression(expression.get("expression"), f"{label}.expression", depth=depth + 1)
+        )
+    raise ValueError(f"{label}.kind must be comparison, quantifier, aggregate, all, any, or not.")
+
+
+def _validate_expression(
+    expression: RuleExpression,
+    phases: tuple[RulePhase, ...],
+    *,
+    label: str,
+) -> None:
+    if isinstance(expression, ProbeExpression):
+        validate_probe_constraint(
+            expression.probe,
+            expression.constraint,
+            phases,
+            label=label,
+        )
+        return
+    if isinstance(expression, QuantifierExpression):
+        from .probes import ProbeValueKind, get_probe
+
+        definition = get_probe(expression.probe)
+        if definition is None or definition.value_kind is not ProbeValueKind.STRING_SET:
+            raise ValueError(f"{label} quantifiers require a collection-valued probe.")
+        validate_probe_constraint(
+            expression.probe,
+            expression.constraint,
+            phases,
+            label=label,
+        )
+        return
+    if isinstance(expression, AggregateExpression):
+        from .probes import ProbeValueKind, get_probe
+
+        definition = get_probe(expression.probe)
+        if definition is None:
+            raise ValueError(f"{label} uses unknown probe {expression.probe!r}.")
+        invalid_phases = set(phases) - set(definition.phases)
+        if invalid_phases:
+            names = ", ".join(sorted(item.value for item in invalid_phases))
+            raise ValueError(f"{label} cannot evaluate {expression.probe!r} during: {names}.")
+        if definition.value_kind is not ProbeValueKind.STRING_SET:
+            raise ValueError(f"{label} aggregates require a collection-valued probe.")
+        value = expression.constraint.value
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            raise ValueError(f"{label} aggregate comparisons require a numeric value.")
+        return
+    if isinstance(expression, NotExpression):
+        _validate_expression(expression.expression, phases, label=f"{label}.expression")
+        return
+    for index, child in enumerate(expression.expressions):
+        _validate_expression(child, phases, label=f"{label}.expressions[{index}]")
+
+
 def _parse_rule(raw_rule: object, filename: str, index: int, source_ids: set[str]) -> VenueRule:
     label = f"{filename}.rules[{index}]"
     rule = _expect_mapping(raw_rule, label)
@@ -310,6 +523,9 @@ def _parse_rule(raw_rule: object, filename: str, index: int, source_ids: set[str
             "level",
             "source_ids",
             "description",
+            "expression",
+            "supersedes",
+            "rationale",
         },
         label=label,
     )
@@ -341,16 +557,33 @@ def _parse_rule(raw_rule: object, filename: str, index: int, source_ids: set[str
     )
     if not phases:
         raise ValueError(f"{filename}.{rule_id} must define at least one validation phase.")
+    constraint = _parse_constraint(rule.get("constraint"), f"{label}.constraint")
+    validate_probe_constraint(probe, constraint, phases, label=label)
+    raw_expression = rule.get("expression")
+    expression = (
+        _parse_expression(raw_expression, f"{label}.expression")
+        if raw_expression is not None
+        else None
+    )
+    if expression is not None:
+        _validate_expression(expression, phases, label=f"{label}.expression")
+    supersedes = _expect_strings(rule.get("supersedes", []), f"{label}.supersedes")
+    rationale = rule.get("rationale")
+    if rationale is not None:
+        rationale = _expect_string(rationale, f"{label}.rationale")
     return VenueRule(
         id=rule_id,
         probe=probe,
-        constraint=_parse_constraint(rule.get("constraint"), f"{label}.constraint"),
+        constraint=constraint,
         applies_to=_parse_applicability(rule.get("applies_to"), f"{label}.applies_to"),
         verification=verification,
         level=level,
         source_ids=linked_sources,
         description=_expect_string(rule.get("description"), f"{label}.description"),
         phases=phases,
+        expression=expression,
+        supersedes=supersedes,
+        rationale=rationale,
     )
 
 
@@ -364,10 +597,14 @@ def _canonical_digest(data: dict[str, Any]) -> str:
 def _parse_profile(
     payload: object, filename: str, *, require_filename_match: bool = True
 ) -> VenueProfile:
-    """Parse and semantically validate one schema-v2 profile payload."""
+    """Parse and semantically validate one schema-v2 or schema-v3 payload."""
 
     data = _expect_mapping(payload, filename)
     _validate_schema_envelope(data, filename)
+    document_digest = _canonical_digest(data)
+    if data.get("schema_version") == 2:
+        data = translate_v2_profile(data)
+        _validate_schema_envelope(data, filename)
 
     profile_id = _expect_string(data.get("id"), f"{filename}.id")
     if not _PROFILE_ID.fullmatch(profile_id):
@@ -441,17 +678,46 @@ def _parse_profile(
         and isinstance(rule.value, (int, float))
         and not isinstance(rule.value, bool)
     }
-    if default_width is not None and default_width not in width_options:
+    has_parents = bool(data.get("extends"))
+    if default_width is not None and default_width not in width_options and not has_parents:
         raise ValueError(f"{filename} default width {default_width!r} is not defined.")
     for rule in rules:
         unknown_widths = set(rule.applies_to.widths) - width_options
-        if unknown_widths:
+        if unknown_widths and not has_parents:
             raise ValueError(
                 f"{filename}.{rule.id} applies to undefined widths: "
                 f"{', '.join(sorted(unknown_widths))}."
             )
     aliases = _expect_strings(data.get("aliases"), f"{filename}.aliases")
-    return VenueProfile(
+    namespace = _expect_string(data.get("namespace"), f"{filename}.namespace")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", namespace):
+        raise ValueError(f"{filename}.namespace is invalid.")
+    raw_extends = _expect_strings(data.get("extends"), f"{filename}.extends")
+    extends: list[str] = []
+    for coordinate in raw_extends:
+        parsed_coordinate = ProfileCoordinate.parse(coordinate)
+        if parsed_coordinate.digest is not None:
+            raise ValueError(f"{filename}.extends must use exact un-hashed coordinates.")
+        extends.append(str(parsed_coordinate))
+    governance_data = _expect_mapping(data.get("governance"), f"{filename}.governance")
+    _reject_unknown_keys(
+        governance_data,
+        allowed={"policy", "reviewers", "reviewed_on", "change_note"},
+        label=f"{filename}.governance",
+    )
+    reviewed_on_raw = governance_data.get("reviewed_on")
+    reviewed_on = (
+        _validate_date(
+            _expect_string(reviewed_on_raw, f"{filename}.governance.reviewed_on"),
+            f"{filename}.governance.reviewed_on",
+        )
+        if reviewed_on_raw is not None
+        else None
+    )
+    change_note = governance_data.get("change_note")
+    if change_note is not None:
+        change_note = _expect_string(change_note, f"{filename}.governance.change_note")
+    profile = VenueProfile(
         id=profile_id,
         name=_expect_string(data.get("name"), f"{filename}.name"),
         kind=VenueKind(_expect_string(data.get("kind"), f"{filename}.kind")),
@@ -466,14 +732,30 @@ def _parse_profile(
         sources=sources,
         rules=rules,
         caveats=_expect_strings(data.get("caveats"), f"{filename}.caveats"),
-        schema_version=2,
+        schema_version=3,
         revision=revision,
         effective_date=_validate_date(
             _expect_string(data.get("effective_date"), f"{filename}.effective_date"),
             f"{filename}.effective_date",
         ),
         digest=_canonical_digest(data),
+        document_digest=document_digest,
+        namespace=namespace,
+        status=ProfileStatus(_expect_string(data.get("status"), f"{filename}.status")),
+        license=_expect_string(data.get("license"), f"{filename}.license"),
+        maintainers=_expect_strings(data.get("maintainers"), f"{filename}.maintainers"),
+        extends=tuple(extends),
+        governance=ProfileGovernance(
+            policy=_expect_string(governance_data.get("policy"), f"{filename}.governance.policy"),
+            reviewers=_expect_strings(
+                governance_data.get("reviewers"), f"{filename}.governance.reviewers"
+            ),
+            reviewed_on=reviewed_on,
+            change_note=change_note,
+        ),
     )
+    require_governance(profile)
+    return profile
 
 
 def validate_profile_data(payload: object, *, filename: str = "profile.json") -> VenueProfile:
@@ -483,7 +765,7 @@ def validate_profile_data(payload: object, *, filename: str = "profile.json") ->
 
 
 def load_profile(path: str | Path) -> VenueProfile:
-    """Load and validate a schema-v2 profile from a local JSON file."""
+    """Load and validate a schema-v2 or schema-v3 profile from local JSON."""
 
     profile_path = Path(path)
     try:
@@ -599,9 +881,20 @@ def _load_profiles() -> tuple[VenueProfile, ...]:
         coordinates.add(profile.coordinate)
         loaded.append(profile)
 
-    for profile in bundled:
+    plugin_profiles = _load_plugin_profiles()
+    raw_profiles = (*bundled, *plugin_profiles)
+    raw_coordinates = [profile.coordinate for profile in raw_profiles]
+    if len(raw_coordinates) != len(set(raw_coordinates)):
+        duplicates = sorted(
+            coordinate
+            for coordinate in set(raw_coordinates)
+            if raw_coordinates.count(coordinate) > 1
+        )
+        raise ValueError(f"Venue profile coordinates are duplicated: {', '.join(duplicates)}.")
+    composed = resolve_composition(tuple(raw_profiles))
+    for profile in composed[: len(bundled)]:
         add_profile(profile)
-    for profile in _load_plugin_profiles():
+    for profile in composed[len(bundled) :]:
         try:
             add_profile(profile)
         except ValueError as exc:
@@ -662,19 +955,29 @@ def _select_latest(profiles: list[VenueProfile]) -> VenueProfile:
 
 
 def _resolve_pinned(query: str, profiles: tuple[VenueProfile, ...]) -> VenueProfile:
-    base, separator, revision = query.strip().rpartition("@")
-    if not separator or not base or not revision:
-        raise ValueError(f"Invalid profile coordinate {query!r}; use '<profile-id>@YYYY.MM.PATCH'.")
-    normalized_base = normalize_venue_name(base)
+    try:
+        coordinate = ProfileCoordinate.parse(query.strip())
+    except ValueError as exc:
+        raise ValueError(f"Invalid profile coordinate {query!r}: {exc}") from exc
     candidates = [
         profile
         for profile in profiles
-        if normalized_base == normalize_venue_name(profile.id) and profile.revision == revision
+        if coordinate.namespace == profile.namespace
+        and coordinate.profile_id == profile.id
+        and coordinate.revision == profile.revision
     ]
     if len(candidates) == 1:
-        return candidates[0]
+        profile = candidates[0]
+        if coordinate.digest is not None and coordinate.digest != profile.digest:
+            raise ValueError(
+                f"Digest mismatch for {profile.coordinate!r}: requested {coordinate.digest}, "
+                f"resolved {profile.digest}."
+            )
+        return profile
     base_profiles = [
-        profile for profile in profiles if normalized_base == normalize_venue_name(profile.id)
+        profile
+        for profile in profiles
+        if profile.namespace == coordinate.namespace and profile.id == coordinate.profile_id
     ]
     if base_profiles:
         revisions = ", ".join(
@@ -682,10 +985,12 @@ def _resolve_pinned(query: str, profiles: tuple[VenueProfile, ...]) -> VenueProf
             for profile in sorted(base_profiles, key=lambda item: _revision_key(item.revision))
         )
         raise ValueError(
-            f"Unknown revision {revision!r} for {base!r}. Available coordinates: {revisions}."
+            f"Unknown revision {coordinate.revision!r} for {coordinate.profile_id!r}. "
+            f"Available coordinates: {revisions}."
         )
     raise ValueError(
-        f"Unknown profile id {base!r}. Coordinates must use an exact profile id before '@'."
+        f"Unknown profile id {coordinate.profile_id!r}. "
+        "Coordinates must use an exact profile id before '@'."
     )
 
 

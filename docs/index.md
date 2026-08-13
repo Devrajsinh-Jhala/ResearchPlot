@@ -1,109 +1,152 @@
-# ResearchPlot 1.0
+# ResearchPlot 2.0
 
-ResearchPlot is an offline, source-backed compliance layer for Matplotlib figures and
-their exported artifacts. It converts a versioned venue profile plus figure intent
-into an exact style, a three-state compliance report, and—when requested—an audited
-submission bundle.
+## Know what your figure proves before you submit it
 
-!!! important "A compliance assistant"
+ResearchPlot is a local, source-backed venue-compliance compiler. Drop in an existing
+PDF, SVG, EPS, PNG, JPEG, or TIFF; pair it with an immutable venue profile; and get a
+report that separates verified requirements, known failures, recommendations, and
+evidence the software could not establish.
 
-    ResearchPlot cannot guarantee editorial acceptance. Venue instructions can change,
-    journal-specific rules can override publisher guidance, and some requirements need
-    human judgment. Reports expose sources, caveats, and unresolved checks so those
-    limits remain visible.
+!!! important "Evidence, not an acceptance guarantee"
+
+    `COMPLIANT` means every applicable **encoded** required rule is covered and passes.
+    It does not validate scientific correctness, replace the official author guide, or
+    guarantee editorial acceptance. Every report carries its source URLs, caveats,
+    profile digest, and unresolved checks.
+
+<div class="rp-pipeline" role="img" aria-label="An animated workflow from a research figure and locked venue profile through local inspection to a coverage-aware report and verified submission bundle">
+  <span>Figure</span><i>+</i><span>locked venue</span><b>→</b><span>local inspection</span><b>→</b><span>coverage</span><b>→</b><span>report</span><b>→</b><span>bundle</span>
+</div>
 
 <figure class="rp-architecture">
-  <img src="assets/architecture.svg" alt="Animated ResearchPlot pipeline from a versioned profile and figure target through validation, transactional export, artifact audit, and a provenance manifest.">
-  <figcaption>Evidence flows from immutable venue rules to the artifact that is actually submitted.</figcaption>
+  <img src="assets/architecture.svg" alt="A schema-v3 project and locked profile compile into phase observations, explicit coverage, a truthful verdict, and evidence outputs.">
+  <figcaption>The moving evidence path respects reduced-motion preferences.</figcaption>
 </figure>
 
 ```mermaid
 flowchart LR
-    V["Venue profile<br/>with provenance"] --> T["Target<br/>role + width + content"]
-    T --> S["Matplotlib style"]
-    T --> C["Rule engine"]
-    F["Live figure"] --> C
-    C --> E["Transactional export"]
-    E --> A["Artifact audit"]
-    A --> R["Report + manifest<br/>+ SHA-256 hashes"]
+    A["Saved artifact"] --> O["File observer"]
+    L["Live Matplotlib figure"] --> O2["Live observer"]
+    P["Captions, descriptions, source data"] --> O3["Bundle observer"]
+    M["Compiled manuscript PDF"] --> O4["Manuscript observer"]
+    V["Locked source-backed profile"] --> C["Compliance plan"]
+    C --> O
+    C --> O2
+    C --> O3
+    C --> O4
+    O --> R["Coverage-aware verdict"]
+    O2 --> R
+    O3 --> R
+    O4 --> R
 ```
 
-## Start in five minutes
+## Audit a saved file
 
 ```bash
 python -m pip install researchplot-venues
+
+researchplot audit figures/figure1.pdf \
+  --profile nature@2026.08.0 \
+  --role main \
+  --width single \
+  --content line-art
 ```
+
+The distribution is `researchplot-venues`; the Python package and command are both
+`researchplot`. Base installation is offline at runtime and does not require LaTeX.
+
+[Start with an artifact](getting-started.md){ .md-button .md-button--primary }
+[Explore ResearchPlot 2.0](v2.md){ .md-button }
+
+## Three truthful verdicts
+
+| Verdict | What ResearchPlot established |
+| --- | --- |
+| `COMPLIANT` | All applicable encoded required checks have sufficient evidence and pass. |
+| `NON_COMPLIANT` | At least one applicable required rule is known to fail. |
+| `INDETERMINATE` | No required failure is known, but required evidence or capability is missing. |
+
+A file-only audit can be useful without being complete. For example, PDF resources may
+show whether fonts are embedded, but the PDF cannot reliably reconstruct every
+Matplotlib artist's original typeface and size. A project report preserves that gap
+instead of converting it into a green result.
+
+## One project, every deliverable
+
+Schema-v3 projects connect a pinned profile to logical figures, concrete deliverables,
+captions, short and long descriptions, panels, source data, author attestations, and an
+optional compiled manuscript PDF.
 
 ```python
-from pathlib import Path
-
-import matplotlib.pyplot as plt
 import researchplot as rp
 
-target = rp.target(
-    "nature@2026.08.0",
-    role="main",
-    width="single",
-    content="line-art",
-)
+project = rp.Project.load("researchplot.toml")
+report = project.plan(frozen=True).check()
 
-with target.style() as style:
+print(report.verdict)
+print(report.coverage)
+print(report.sources)
+print(report.remediations)
+```
+
+When creating a Matplotlib figure, the same project supplies an exact physical style
+and keeps the live evidence:
+
+```python
+figure = project.figure("figure-1")
+
+with figure.style(deliverable="main") as style:
     fig, ax = style.subplots(aspect=0.62)
-    ax.plot([0, 1, 2, 3], [0, 1, 4, 9], marker="o")
-    ax.set(xlabel="Input", ylabel="Response")
-    result = target.export(fig, Path("submission") / "figure1.pdf")
-
-print(result.report.verdict)
-plt.close(fig)
+    ax.plot(x, y, marker="o")
+    report = figure.check(fig=fig)
+    result = figure.export(fig, policy="violations")
 ```
 
-[Follow the getting-started guide](getting-started.md){ .md-button .md-button--primary }
-[Explore the architecture](architecture.md){ .md-button }
+## Why ResearchPlot is different
 
-## Why use it?
+### Sources travel with every rule
 
-### Reproducible venue resolution
+Profiles are immutable, digest-addressed data. Each rule states its strength,
+applicability, supported evidence phases, verification mode, official source URL and
+locator, review status, and caveats. Missing official guidance is not invented.
 
-Profiles use immutable coordinates such as `nature@2026.08.0`. Friendly aliases remain
-convenient during exploration, but warn and report the coordinate they resolve to.
+### The submitted file is inspected
 
-### Honest compliance reports
+ResearchPlot audits actual PDF/SVG/EPS/raster output, reports passive active content,
+and can run bounded inspection in a subprocess. It also creates deterministic visual
+accessibility previews and advisory diagnostics without generating prose or changing
+scientific data.
 
-Required rules, recommendations, and inferred guidance are evaluated separately from
-check outcomes. A required check that cannot be established makes the verdict
-`INDETERMINATE`, never a silent pass.
+### Automation remains reviewable
 
-### Verify the artifact, not just the plotting state
+Terminal, JSON, SARIF, and self-contained HTML views derive from the same evidence.
+Exit codes distinguish a venue failure (`1`), an operational/input failure (`2`), and
+missing required evidence (`3`).
 
-ResearchPlot audits PDF, SVG, PNG, JPEG, TIFF, and EPS output after export. Physical
-size, fonts, format metadata, effective resolution, and accessible presentation are
-checked where the file format exposes enough evidence.
+### The workspace stays local
 
-### Submission provenance
+The optional browser workspace binds only to `127.0.0.1`, uses a per-launch token, and
+deletes temporary uploads after inspection. It never uploads artifacts or performs a
+background profile update.
 
-A bundle manifest ties each exported file to its profile coordinate and digest, full
-source metadata, target role, check results, manual attestations, descriptive text,
-source data, and SHA-256 hash.
+## Choose a workflow
 
-## Pick a workflow
-
-| Goal | Start here |
+| Goal | Guide |
 | --- | --- |
-| Create and export one figure | [Getting started](getting-started.md) |
-| Understand pass/fail/unknown behavior | [Compliance reports](compliance.md) |
-| Audit existing files in CI | [Project configuration](configuration.md) |
-| Build a submission directory | [Export and bundles](bundles.md) |
-| Inspect official sources and profile revisions | [Profiles and provenance](profiles.md) |
-| Move from `rp.use()` and `report.passed` | [0.2 migration](migration.md) |
-| Extend ResearchPlot | [Contributing](contributing.md) |
+| Audit or create the first figure | [Getting started](getting-started.md) |
+| Understand coverage and verdicts | [Compliance reports](compliance.md) |
+| Define a strict project | [Project configuration](configuration.md) |
+| Inspect source evidence | [Profiles and provenance](profiles.md) |
+| Review files in a browser | [Local workspace](local-web.md) |
+| Build and verify a submission directory/archive | [Bundles](bundles.md) |
+| Inspect a compiled manuscript PDF | [Manuscript audit](manuscript.md) |
+| Move from v1 | [Migration](migration.md) |
+| Review safety boundaries | [Limitations and security](limitations.md) |
 
-## Stable names
+## Supported boundaries
 
-The PyPI distribution is `researchplot-venues`, while the import package and CLI are
-both `researchplot`:
-
-```text
-pip install researchplot-venues
-import researchplot
-researchplot --help
-```
+Live styling and live-artist validation are Matplotlib-specific. Saved artifacts from
+Seaborn, SciencePlots, TUEPlots, PlotStyle, R, Julia, browser tools, or design software
+remain auditable. ResearchPlot does not edit scientific data, write alt text with AI,
+detect research misconduct, submit to a publisher, or parse LaTeX/DOCX manuscript
+source.

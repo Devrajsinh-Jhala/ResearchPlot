@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "researchplot-venues"
-version = "1.0.0"
-description = "Source-backed figure preflight and submission compliance for research venues."
+version = "2.0.0"
+description = "Coverage-aware, source-backed preflight for research figures and submissions."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -43,6 +43,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+plots = [
+  "numpy>=1.24",
+  "pandas>=1.5",
+  "scikit-learn>=1.2",
+  "scipy>=1.10",
+  "seaborn>=0.12",
+]
 dev = [
   "build>=1.2",
   "jsonschema>=4.23",
@@ -58,6 +65,20 @@ docs = [
   "mkdocs>=1.6",
   "mkdocs-material>=9.5",
   "mkdocstrings[python]>=0.27",
+]
+registry = [
+  "tuf>=7,<8",
+]
+web = []
+accessibility = []
+manuscript = []
+all = [
+  "numpy>=1.24",
+  "pandas>=1.5",
+  "scikit-learn>=1.2",
+  "scipy>=1.10",
+  "seaborn>=0.12",
+  "tuf>=7,<8",
 ]
 
 [project.urls]
@@ -123,10 +144,20 @@ warn_unused_ignores = true
 module = [
   "matplotlib",
   "matplotlib.*",
+  "numpy",
+  "numpy.*",
+  "pandas",
+  "pandas.*",
   "PIL",
   "PIL.*",
   "pypdf",
   "pypdf.*",
+  "scipy",
+  "scipy.*",
+  "seaborn",
+  "seaborn.*",
+  "sklearn",
+  "sklearn.*",
 ]
 follow_imports = "skip"
 ignore_missing_imports = true

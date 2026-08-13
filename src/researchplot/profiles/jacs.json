@@ -1,0 +1,254 @@
+{
+  "schema_version": 3,
+  "id": "jacs",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "Journal of the American Chemical Society",
+  "kind": "journal",
+  "year": null,
+  "aliases": [
+    "journal of the american chemical society"
+  ],
+  "scope": "JACS manuscript artwork plus the required TOC graphic.",
+  "default_width": "single",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The profile can validate a supplied TOC graphic but cannot establish that the manuscript contains one.",
+    "Black-and-white TIFF TOC graphics require 1200 DPI; that color-mode-specific rule remains manual."
+  ],
+  "sources": [
+    {
+      "id": "jacs-requirements",
+      "title": "JACS submission requirements",
+      "url": "https://pubs.acs.org/page/jacsat/submission/recentchanges.html",
+      "locator": "Articles and Communications require a TOC graphic",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "JACS submission requirements",
+      "archive_url": null,
+      "content_sha256": null
+    },
+    {
+      "id": "acs-toc-guidelines",
+      "title": "ACS Guidelines for Table of Contents/Abstract Graphics",
+      "url": "https://pubsapp.acs.org/paragonplus/submission/toc_abstract_graphics_guidelines.pdf",
+      "locator": "Specifications, updated February 28, 2024",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_guideline",
+      "publisher": "ACS Guidelines for Table of Contents/Abstract Graphics",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.toc_maximum",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 82.55,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "acs-toc-guidelines"
+      ],
+      "description": "A TOC graphic must be no wider than 3.25 inches.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.height.toc_maximum",
+      "level": "required",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 44.45,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "acs-toc-guidelines"
+      ],
+      "description": "A TOC graphic must be no higher than 1.75 inches.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.toc_minimum",
+      "level": "required",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 6,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "acs-toc-guidelines"
+      ],
+      "description": "TOC graphic text must be at least 6 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.family.toc",
+      "level": "recommended",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Helvetica",
+          "Arial"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "acs-toc-guidelines"
+      ],
+      "description": "A sans-serif face such as Helvetica is recommended for TOC graphics.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.formats.toc",
+      "level": "required",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "tiff",
+          "eps"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "acs-toc-guidelines"
+      ],
+      "description": "TOC graphics must be supplied as TIFF or EPS.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.min_dpi.toc",
+      "level": "required",
+      "probe": "artifact.dpi",
+      "constraint": {
+        "operator": "gte",
+        "value": 300,
+        "unit": "dpi",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [
+          "tiff"
+        ],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "acs-toc-guidelines"
+      ],
+      "description": "Color TIFF TOC graphics require at least 300 DPI.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [
+    "acs-generic@2026.08.0"
+  ],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

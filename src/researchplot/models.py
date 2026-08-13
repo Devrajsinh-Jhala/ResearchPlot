@@ -6,6 +6,7 @@ loaded, inspected, hashed, and serialised in a completely offline process.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TypeAlias
@@ -19,6 +20,26 @@ class VenueKind(StrEnum):
     JOURNAL = "journal"
     CONFERENCE = "conference"
     PUBLISHER = "publisher"
+
+
+class ProfileStatus(StrEnum):
+    """Governance state of a profile document."""
+
+    DRAFT = "draft"
+    VERIFIED = "verified"
+    DEPRECATED = "deprecated"
+    WITHDRAWN = "withdrawn"
+    TRANSLATED = "translated"
+
+
+class SourceKind(StrEnum):
+    """Kind of primary evidence represented by a source reference."""
+
+    OFFICIAL_GUIDELINE = "official_guideline"
+    OFFICIAL_TEMPLATE = "official_template"
+    OFFICIAL_POLICY = "official_policy"
+    STANDARD = "standard"
+    ARCHIVED_COPY = "archived_copy"
 
 
 class RuleLevel(StrEnum):
@@ -77,6 +98,7 @@ class RulePhase(StrEnum):
     LIVE = "live"
     FILE = "file"
     BUNDLE = "bundle"
+    MANUSCRIPT = "manuscript"
 
 
 class ConstraintOperator(StrEnum):
@@ -95,6 +117,8 @@ class ConstraintOperator(StrEnum):
     CONTAINS = "contains"
     NOT_CONTAINS = "not_contains"
     APPROX = "approx"
+    EXISTS = "exists"
+    PATTERN = "pattern"
     REQUIRED = "required"
     PROHIBITED = "prohibited"
 
@@ -115,6 +139,169 @@ class RuleConstraint:
             "value": value,
             "unit": self.unit,
             "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ProbeExpression:
+    """A typed comparison against one observation probe."""
+
+    probe: str
+    constraint: RuleConstraint
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "kind": "comparison",
+            "probe": self.probe,
+            "constraint": self.constraint.to_dict(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class AllExpression:
+    """An expression that succeeds only when every child succeeds."""
+
+    expressions: tuple[RuleExpression, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {"kind": "all", "expressions": [item.to_dict() for item in self.expressions]}
+
+
+@dataclass(frozen=True, slots=True)
+class AnyExpression:
+    """An expression that succeeds when at least one child succeeds."""
+
+    expressions: tuple[RuleExpression, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        return {"kind": "any", "expressions": [item.to_dict() for item in self.expressions]}
+
+
+@dataclass(frozen=True, slots=True)
+class NotExpression:
+    """Logical negation of another rule expression."""
+
+    expression: RuleExpression
+
+    def to_dict(self) -> dict[str, object]:
+        return {"kind": "not", "expression": self.expression.to_dict()}
+
+
+@dataclass(frozen=True, slots=True)
+class QuantifierExpression:
+    """Apply one constraint to every or any member of a bounded observation."""
+
+    quantifier: str
+    probe: str
+    constraint: RuleConstraint
+
+    def __post_init__(self) -> None:
+        if self.quantifier not in {"all", "any"}:
+            raise ValueError("Quantifier must be 'all' or 'any'.")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "kind": "quantifier",
+            "quantifier": self.quantifier,
+            "probe": self.probe,
+            "constraint": self.constraint.to_dict(),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class AggregateExpression:
+    """Compare a count, minimum, or maximum derived from an observation."""
+
+    aggregate: str
+    probe: str
+    constraint: RuleConstraint
+
+    def __post_init__(self) -> None:
+        if self.aggregate not in {"count", "minimum", "maximum"}:
+            raise ValueError("Aggregate must be 'count', 'minimum', or 'maximum'.")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "kind": "aggregate",
+            "aggregate": self.aggregate,
+            "probe": self.probe,
+            "constraint": self.constraint.to_dict(),
+        }
+
+
+RuleExpression: TypeAlias = (
+    ProbeExpression
+    | AllExpression
+    | AnyExpression
+    | NotExpression
+    | QuantifierExpression
+    | AggregateExpression
+)
+
+
+_COORDINATE_RE = re.compile(
+    r"^(?:(?P<namespace>[a-z0-9][a-z0-9._-]*)/)?"
+    r"(?P<profile>[a-z0-9]+(?:-[a-z0-9]+)*)@"
+    r"(?P<revision>[0-9]{4}\.[0-9]{2}\.[0-9]+)"
+    r"(?:#sha256:(?P<digest>[0-9a-f]{64}))?$"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCoordinate:
+    """Canonical, optionally content-pinned profile coordinate.
+
+    The built-in namespace is omitted when rendered so existing coordinates
+    such as ``nature@2026.08.0`` remain valid. Third-party registries render
+    an explicit namespace, for example ``lab.example/nature@2026.08.0``.
+    """
+
+    profile_id: str
+    revision: str
+    namespace: str = "researchplot"
+    digest: str | None = None
+
+    @classmethod
+    def parse(cls, value: str) -> ProfileCoordinate:
+        match = _COORDINATE_RE.fullmatch(value.strip())
+        if match is None:
+            raise ValueError(
+                "Profile coordinate must use "
+                "'[namespace/]profile-id@YYYY.MM.PATCH[#sha256:<digest>]'."
+            )
+        return cls(
+            profile_id=match.group("profile"),
+            revision=match.group("revision"),
+            namespace=match.group("namespace") or "researchplot",
+            digest=match.group("digest"),
+        )
+
+    def with_digest(self, digest: str) -> ProfileCoordinate:
+        if not re.fullmatch(r"[0-9a-f]{64}", digest):
+            raise ValueError("Profile digest must be a lowercase SHA-256 hex digest.")
+        return ProfileCoordinate(self.profile_id, self.revision, self.namespace, digest)
+
+    def __str__(self) -> str:
+        prefix = "" if self.namespace == "researchplot" else f"{self.namespace}/"
+        suffix = f"#sha256:{self.digest}" if self.digest is not None else ""
+        return f"{prefix}{self.profile_id}@{self.revision}{suffix}"
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileGovernance:
+    """Review metadata carried by schema-v3 profiles."""
+
+    policy: str = "researchplot-governance-v1"
+    reviewers: tuple[str, ...] = ()
+    reviewed_on: str | None = None
+    change_note: str | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "policy": self.policy,
+            "reviewers": list(self.reviewers),
+            "reviewed_on": self.reviewed_on,
+            "change_note": self.change_note,
         }
 
 
@@ -181,8 +368,12 @@ class SourceRef:
     locator: str
     retrieved_on: str
     verified_on: str
+    kind: SourceKind = SourceKind.OFFICIAL_GUIDELINE
+    publisher: str | None = None
+    archive_url: str | None = None
+    content_sha256: str | None = None
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "title": self.title,
@@ -190,6 +381,10 @@ class SourceRef:
             "locator": self.locator,
             "retrieved_on": self.retrieved_on,
             "verified_on": self.verified_on,
+            "kind": self.kind.value,
+            "publisher": self.publisher,
+            "archive_url": self.archive_url,
+            "content_sha256": self.content_sha256,
         }
 
 
@@ -206,6 +401,9 @@ class VenueRule:
     source_ids: tuple[str, ...]
     description: str
     phases: tuple[RulePhase, ...] = (RulePhase.LIVE, RulePhase.FILE)
+    expression: RuleExpression | None = None
+    supersedes: tuple[str, ...] = ()
+    rationale: str | None = None
 
     @property
     def value(self) -> RuleValue:
@@ -236,6 +434,9 @@ class VenueRule:
             "level": self.level.value,
             "source_ids": list(self.source_ids),
             "description": self.description,
+            "expression": self.expression.to_dict() if self.expression is not None else None,
+            "supersedes": list(self.supersedes),
+            "rationale": self.rationale,
         }
 
 
@@ -254,16 +455,31 @@ class VenueProfile:
     sources: tuple[SourceRef, ...]
     rules: tuple[VenueRule, ...]
     caveats: tuple[str, ...] = ()
-    schema_version: int = 2
+    schema_version: int = 3
     revision: str = "unversioned"
     effective_date: str = "1970-01-01"
     digest: str = ""
+    namespace: str = "researchplot"
+    status: ProfileStatus = ProfileStatus.VERIFIED
+    license: str = "MIT"
+    maintainers: tuple[str, ...] = ()
+    extends: tuple[str, ...] = ()
+    governance: ProfileGovernance = ProfileGovernance()
+    document_digest: str = ""
 
     @property
     def coordinate(self) -> str:
         """Immutable profile coordinate, for example ``nature@2026.08.0``."""
 
-        return f"{self.id}@{self.revision}"
+        return str(ProfileCoordinate(self.id, self.revision, self.namespace))
+
+    @property
+    def pinned_coordinate(self) -> str:
+        """Coordinate pinned to the resolved profile content digest."""
+
+        if not self.digest:
+            return self.coordinate
+        return str(ProfileCoordinate(self.id, self.revision, self.namespace, self.digest))
 
     @property
     def profile_revision(self) -> str:
@@ -326,10 +542,18 @@ class VenueProfile:
         return {
             "id": self.id,
             "coordinate": self.coordinate,
+            "pinned_coordinate": self.pinned_coordinate,
             "schema_version": self.schema_version,
             "revision": self.revision,
             "effective_date": self.effective_date,
             "digest": self.digest,
+            "document_digest": self.document_digest,
+            "namespace": self.namespace,
+            "status": self.status.value,
+            "license": self.license,
+            "maintainers": list(self.maintainers),
+            "extends": list(self.extends),
+            "governance": self.governance.to_dict(),
             "name": self.name,
             "kind": self.kind.value,
             "year": self.year,

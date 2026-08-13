@@ -1,0 +1,277 @@
+{
+  "schema_version": 3,
+  "id": "cell-graphical-abstract",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "Cell Press graphical abstract",
+  "kind": "publisher",
+  "year": null,
+  "aliases": [
+    "cell press graphical abstract",
+    "cell graphical abstract"
+  ],
+  "scope": "Cell Press graphical abstracts only; not main manuscript figures.",
+  "default_width": "square",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "This profile applies only to the separate Cell Press graphical-abstract deliverable.",
+    "The guide does not establish dimensions for ordinary Cell Press manuscript figures."
+  ],
+  "sources": [
+    {
+      "id": "cell-graphical-abstract",
+      "title": "Cell Press Graphical Abstract Guidelines",
+      "url": "https://crosstalk.cell.com/hubfs/Files/GA_guide.pdf",
+      "locator": "Technical requirements: size, resolution, type, and preferred formats",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_guideline",
+      "publisher": "Cell Press Graphical Abstract Guidelines",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.square",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 139.7,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": [
+          "square"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "cell-graphical-abstract"
+      ],
+      "description": "Graphical abstracts should be 5.5 inches square.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.height.square",
+      "level": "required",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 139.7,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": [
+          "square"
+        ]
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "cell-graphical-abstract"
+      ],
+      "description": "Graphical abstracts should be 5.5 inches square.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.min_dpi.graphical_abstract",
+      "level": "required",
+      "probe": "artifact.dpi",
+      "constraint": {
+        "operator": "gte",
+        "value": 300,
+        "unit": "dpi",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [
+          "png",
+          "jpeg",
+          "tiff"
+        ],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "cell-graphical-abstract"
+      ],
+      "description": "The submitted graphical abstract should be 300 DPI.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.minimum",
+      "level": "required",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 12,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "cell-graphical-abstract"
+      ],
+      "description": "Graphical-abstract text should be at least 12 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.maximum",
+      "level": "required",
+      "probe": "font.size.max_pt",
+      "constraint": {
+        "operator": "lte",
+        "value": 16,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "cell-graphical-abstract"
+      ],
+      "description": "Graphical-abstract text should not exceed 16 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.family.arial",
+      "level": "required",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Arial"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "cell-graphical-abstract"
+      ],
+      "description": "Cell Press specifies Arial for graphical abstracts.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.formats.preferred",
+      "level": "recommended",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "tiff",
+          "pdf",
+          "jpeg"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [
+          "graphical_abstract"
+        ],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "cell-graphical-abstract"
+      ],
+      "description": "TIFF, PDF, and JPEG are the preferred graphical-abstract formats.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

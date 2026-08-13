@@ -1,0 +1,149 @@
+{
+  "schema_version": 3,
+  "id": "iclr-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "International Conference on Learning Representations 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": [
+    "iclr",
+    "iclr 2026"
+  ],
+  "scope": "ICLR 2026 paper figures under the official template.",
+  "default_width": "full",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The template is single-column; it does not define a narrower canonical figure width.",
+    "No figure-specific minimum font size is stated."
+  ],
+  "sources": [
+    {
+      "id": "iclr-author-guide",
+      "title": "ICLR 2026 Author Guide",
+      "url": "https://iclr.cc/Conferences/2026/AuthorGuide",
+      "locator": "Mandatory official template",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "ICLR 2026 Author Guide",
+      "archive_url": null,
+      "content_sha256": null
+    },
+    {
+      "id": "iclr-2026-template",
+      "title": "Official ICLR 2026 template",
+      "url": "https://github.com/ICLR/Master-Template/raw/master/iclr2026.zip",
+      "locator": "Style text width/height and figure instructions",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_template",
+      "publisher": "Official ICLR 2026 template",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.full",
+      "level": "inferred",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 139.7,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "iclr-2026-template"
+      ],
+      "description": "The official template text width is 5.5 inches.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "The full-width figure target is the template text width."
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "inferred",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 228.6,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "iclr-2026-template"
+      ],
+      "description": "Figures must fit within the 9-inch text block.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "The maximum usable height is derived from the template text height."
+    },
+    {
+      "id": "accessibility.non_color_distinctions",
+      "level": "recommended",
+      "probe": "color.non_color_distinctions",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "iclr-2026-template"
+      ],
+      "description": "Captions and body text should make sense in black and white or color.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

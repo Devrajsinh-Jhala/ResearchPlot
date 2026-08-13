@@ -1,0 +1,148 @@
+{
+  "schema_version": 3,
+  "id": "eccv-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "European Conference on Computer Vision 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": [
+    "eccv",
+    "eccv 2026"
+  ],
+  "scope": "ECCV 2026 paper figures under the official author kit.",
+  "default_width": "full",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "ECCV 2026 uses a single-column LNCS-derived layout; no second canonical width is stated."
+  ],
+  "sources": [
+    {
+      "id": "eccv-policy",
+      "title": "ECCV 2026 Submission Policies",
+      "url": "https://eccv.ecva.net/Conferences/2026/SubmissionPolicies",
+      "locator": "Mandatory, changed 2026 author kit",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "ECCV 2026 Submission Policies",
+      "archive_url": null,
+      "content_sha256": null
+    },
+    {
+      "id": "eccv-2026-template",
+      "title": "ECCV 2026 official-linked paper template",
+      "url": "https://github.com/paolo-favaro/paper-template",
+      "locator": "122 x 193 mm text block and 6-point figure minimum",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_template",
+      "publisher": "ECCV 2026 official-linked paper template",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.full",
+      "level": "inferred",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 122.0,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "eccv-2026-template"
+      ],
+      "description": "The official template text block is 122 mm wide.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "The full-width target is the template text width."
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "inferred",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 193.0,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "eccv-2026-template"
+      ],
+      "description": "Figures must fit within the 193 mm text block.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.minimum",
+      "level": "required",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 6,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "eccv-2026-template"
+      ],
+      "description": "Figure lettering must not be smaller than 6 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "nature",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -23,7 +23,11 @@
       "url": "https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/",
       "locator": "Building and exporting figure panels: size, type, lines, and formats",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "Nature",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -50,7 +54,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Nature single-column width."
+      "description": "Nature single-column width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.double",
@@ -75,7 +82,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Nature double-column width."
+      "description": "Nature double-column width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.max_height",
@@ -96,7 +106,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Maximum figure height leaves space for the legend."
+      "description": "Maximum figure height leaves space for the legend.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.family",
@@ -120,7 +133,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Use a standard sans-serif font such as Arial or Helvetica."
+      "description": "Use a standard sans-serif font such as Arial or Helvetica.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.min",
@@ -140,7 +156,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Minimum text size at final output size."
+      "description": "Minimum text size at final output size.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.max",
@@ -160,7 +179,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Maximum text size at final output size."
+      "description": "Maximum text size at final output size.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.target",
@@ -180,7 +202,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Default to the upper end of Nature's permitted range."
+      "description": "Default to the upper end of Nature's permitted range.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "line.width.min",
@@ -200,7 +225,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Lines thinner than this can disappear in print."
+      "description": "Lines thinner than this can disappear in print.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.title.prohibited",
@@ -220,7 +248,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Keep explanatory titles in the figure legend rather than the artwork."
+      "description": "Keep explanatory titles in the figure legend rather than the artwork.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.type3.prohibited",
@@ -244,7 +275,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Text must remain editable rather than using Type 3 glyphs."
+      "description": "Text must remain editable rather than using Type 3 glyphs.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.embedding.required",
@@ -268,7 +302,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "All fonts in PDF artwork must be embedded."
+      "description": "All fonts in PDF artwork must be embedded.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.vector",
@@ -297,7 +334,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Use one of Nature's supported vector file formats for data visualizations and line art."
+      "description": "Use one of Nature's supported vector file formats for data visualizations and line art.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.halftone",
@@ -325,7 +365,10 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Raster formats apply to Extended Data and image-based content."
+      "description": "Raster formats apply to Extended Data and image-based content.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.min_dpi.halftone",
@@ -355,7 +398,25 @@
       "source_ids": [
         "nature-panels"
       ],
-      "description": "Extended Data images should be supplied at up to 300 DPI."
+      "description": "Extended Data images should be supplied at up to 300 DPI.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

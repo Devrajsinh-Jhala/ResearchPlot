@@ -1,0 +1,49 @@
+name: Venue profile request or correction
+description: Propose a source-backed venue profile or report an evidence problem.
+title: "profile: "
+labels: [profile, evidence]
+body:
+  - type: markdown
+    attributes:
+      value: ResearchPlot records only official, traceable guidance. Missing rules are left unspecified.
+  - type: input
+    id: venue
+    attributes:
+      label: Venue and revision/year
+      placeholder: Example Journal, instructions verified August 2026
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Official sources and exact locators
+      description: Include URLs plus page, section, template line, or heading for each proposed rule.
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: Proposed or corrected rules
+      description: Quote only the minimum necessary wording and explain your interpretation.
+    validations:
+      required: true
+  - type: dropdown
+    id: strength
+    attributes:
+      label: Source strength
+      options:
+        - Required
+        - Recommended
+        - Inferred
+        - Mixed or unsure
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: The links are publisher- or venue-controlled official sources.
+          required: true
+        - label: I have not invented values for guidance the source does not specify.
+          required: true

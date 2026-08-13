@@ -1,181 +1,162 @@
 # Export and submission bundles
 
-ResearchPlot verifies what is written, not merely what Matplotlib intended to write.
-One-figure export and multi-figure bundles use the same staged, post-audited pipeline.
+ResearchPlot separates figure export, submission-directory construction, archive
+verification, and metadata interoperability. Each boundary has different guarantees.
 
-## Export one artifact
+## Figure export
 
 ```python
-from pathlib import Path
+figure = project.figure("figure-1")
 
-result = target.export(
-    fig,
-    Path("submission") / "figure1.pdf",
-    policy="complete",
-)
+with figure.style(deliverable="main") as style:
+    fig, ax = style.subplots(aspect=0.62)
+    ax.plot(x, y)
+    result = figure.export(fig, policy="violations")
 
 print(result.paths)
 print(result.report.verdict)
 print(result.manifest_path)
 ```
 
-An `ExportResult` contains the committed output paths, the combined live/file report,
-the typed `manifest`, and `manifest_path`. Unlike `0.2`, export does not return a bare
-list of paths.
+Export stages the candidate artifact, inspects the actual serialized file, evaluates
+policy, writes a single-export manifest, and commits accepted output. A handled commit
+failure rolls back. Multiple paths are replaced sequentially, so abrupt process
+termination and non-cooperating concurrent writers remain outside the transaction
+guarantee.
 
-When a target and venue allow more than one requested representation, all candidates
-belong to one staged transaction. ResearchPlot audits the complete staged set before
-commit and rolls back handled commit failures.
+The planner distinguishes allowed formats, selected formats, a preferred format, and
+required companions. It never interprets every allowed alternative as mandatory.
 
-## Transaction lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> Inspecting
-    Inspecting --> Rejected: live policy blocks
-    Inspecting --> Staging: live checks continue
-    Staging --> Auditing: candidate files written
-    Staging --> Aborted: write error
-    Auditing --> Rejected: artifact policy blocks
-    Auditing --> Committing: policy succeeds
-    Committing --> Complete: per-file commit succeeds
-    Committing --> Aborted: commit error
-    Rejected --> Cleaned
-    Aborted --> Cleaned
-    Cleaned --> [*]
-    Complete --> [*]
-```
-
-Handled commit failures trigger rollback. The final destinations of a multi-format
-export are replaced sequentially; they are not an observably atomic filesystem
-operation. Abrupt process termination and non-cooperating concurrent writers are
-outside the rollback guarantee. A submission bundle is staged as one directory and
-published with a directory rename, but an external writer racing for the same
-destination is likewise outside the guarantee.
-
-Existing destinations are handled according to the documented overwrite option;
-ResearchPlot never assumes permission to replace unrelated files.
-
-## Build a bundle in Python
+## Build a project submission directory
 
 ```python
 import researchplot as rp
 
+project = rp.Project.load("researchplot.toml")
+result = project.bundle("dist/submission")
+
+print(result.path)
+print(result.manifest_path)
+print(result.passed)
+```
+
+Or use the CLI:
+
+```bash
+researchplot bundle build \
+  --config researchplot.toml \
+  --output dist/submission
+```
+
+The builder stages a new directory and refuses to replace an existing destination. It
+normalizes portable relative names, copies source data where representable, records
+reports and profile provenance, and hashes every artifact.
+
+!!! warning "Current schema-v3 bridge"
+
+    `Project.bundle()` currently delegates to the v1 submission manifest. An
+    existing-file figure must have one existing preferred required deliverable. The
+    bridge accepts one source-data file per figure and rejects generic attachments or
+    multiple source files instead of losing their semantics. The destination argument
+    is a directory; `policy=` and `ro_crate=` are not `Project.bundle()` parameters.
+
+The lower-level v1-compatible `Submission` class remains available throughout 2.x:
+
+```python
 submission = rp.Submission(
     "nature@2026.08.0",
-    output_dir="submission",
+    output_dir="dist/submission",
     policy="complete",
 )
-
 submission.add(
     "figure1",
-    fig1,
+    fig,
     role="main",
     width="single",
     content="line-art",
     formats=("pdf",),
-    caption="Response increases quadratically with input.",
-    alt_text="A rising curve that becomes progressively steeper.",
+    alt_text="Line chart with a monotonic increase.",
+    caption="Response increases across measured inputs.",
     source_data="data/figure1.csv",
 )
-
-submission.add(
-    "figure2",
-    fig2,
-    role="extended-data",
-    width="double",
-    content="combination",
-    formats=("pdf",),
-    caption="Sensitivity analysis across five parameter values.",
-    alt_text="Five overlapping curves with similar peaks and different tails.",
-    source_data="data/figure2.csv",
-)
-
-bundle = submission.build()
-print(bundle.path)
-print(bundle.manifest_path)
-print(bundle.passed)
-for item in bundle.items:
-    print(item.name, item.report.verdict)
+result = submission.build()
 ```
 
-`Submission.add()` records intent and metadata. `build()` performs the writes and
-policy decision. Adding an object does not mutate the output directory.
-
-## Build from configuration
-
-```bash
-researchplot bundle build --config researchplot.toml
-```
-
-This is the recommended release workflow because the declarative configuration and
-profile lock can be reviewed with the manuscript.
-
-## Manifest contents
-
-The generated `researchplot-manifest.json` includes:
-
-- manifest schema and ResearchPlot versions;
-- exact profile coordinate, digest, source records, and caveats;
-- per-figure role, width, content kind, and output format;
-- expected and observed dimensions and artifact metadata;
-- automated check results, their full source metadata, skipped checks, and manual
-  attestations;
-- caption, alt text, and a bundled source-data path when supplied;
-- SHA-256 hash and relative path for every committed artifact.
-
-```mermaid
-erDiagram
-    MANIFEST ||--|| PROFILE : records
-    MANIFEST ||--o{ FIGURE : contains
-    PROFILE ||--o{ SOURCE : cites
-    PROFILE ||--o{ RULE : defines
-    FIGURE ||--o{ ARTIFACT : exports
-    FIGURE ||--o{ CHECK : reports
-    FIGURE ||--o{ ATTESTATION : records
-    ARTIFACT ||--|| HASH : verifies
-```
-
-When `source_data` names a file, ResearchPlot copies it under `source-data/`, records its
-relative path, and includes its SHA-256 artifact record. It does not interpret or upload
-research data.
-
-See [Manifest and report formats](formats.md) for serialization stability.
-
-## Audit an existing artifact
+## Verify the directory manifest
 
 ```python
-report = target.audit("external/figure1.pdf")
+verification = rp.verify_manifest("dist/submission")
+
+if not verification.valid:
+    for issue in verification.issues:
+        print(issue.code, issue.path, issue.message)
 ```
 
-Or:
+Strict verification checks manifest shape, member paths, case collisions, file type,
+size, digest, missing members, unexpected members, and symlink/junction escapes without
+trusting archive names.
 
-```bash
-researchplot check external/figure1.pdf \
-  --profile nature@2026.08.0 \
-  --role main \
-  --width single \
-  --content line-art
+## Create and verify a deterministic archive
+
+```python
+archive = rp.create_deterministic_archive(
+    "dist/submission",
+    "dist/submission.zip",
+)
+print(archive.sha256)
+
+verification = rp.verify_deterministic_archive("dist/submission.zip")
+assert verification.valid
 ```
 
-Supported artifact families are PDF, SVG, PNG, JPEG, TIFF, and EPS. Capabilities vary by
-format:
+The writer supports `.zip` and uncompressed `.tar`. Both include only the manifest and
+its declared artifacts, in stable order, with normalized timestamps, ownership, and
+permissions. `SOURCE_DATE_EPOCH` controls the canonical archive timestamp when set;
+otherwise ResearchPlot uses a fixed reproducible epoch. The writer refuses an existing
+destination and places temporary data beside the final path.
 
-| Format | Examples of available evidence |
-| --- | --- |
-| PDF | All page boxes, recursive font resources, embedding, and Type 3 fonts. |
-| SVG | Physical dimensions, `viewBox`, text nodes, font declarations, embedded assets, external references. |
-| PNG/JPEG/TIFF | Pixel dimensions, effective DPI, color mode, bit depth, ICC metadata, compression, file size. |
-| EPS | `BoundingBox`, `HiResBoundingBox`, physical dimensions, and allowed format. |
+Transactional PDF and SVG export also removes volatile creation dates, fixes the
+ResearchPlot creator metadata, and uses a profile-derived SVG hash salt. Repeated exports
+of the same figure and target therefore have stable vector bytes under the tested
+Matplotlib backend and dependency set.
 
-Unavailable checks are marked skipped. For example, raster pixels normally cannot
-prove which font family was used before rasterization.
+## JATS 1.4 metadata
 
-## Reproducibility checks
+Convert an existing submission manifest into a JATS `<fig-group>` fragment:
 
-The file hash proves byte identity, not scientific validity. Rebuilding the same figure
-may produce a different byte stream because a backend embeds timestamps or identifiers;
-the manifest still allows reviewers to verify the exact artifact that was submitted.
+```python
+jats = rp.submission_manifest_to_jats(result.manifest_path)
+Path("dist/figures.xml").write_text(jats, encoding="utf-8")
+```
 
-Use a pinned profile coordinate and committed lock file to make the rule evidence
-reproducible as well.
+The converter includes available labels, captions, alt text, graphics, and MIME hints.
+It does not inspect the referenced files or invent missing prose. Long descriptions,
+panel grouping, and accessible data alternatives are limited by what the current v1
+submission manifest can represent.
+
+## RO-Crate 1.3 metadata
+
+```python
+crate = rp.submission_manifest_to_ro_crate(
+    result.manifest_path,
+    name="Example paper figure evidence",
+    creators=["A. Researcher"],
+    license="https://creativecommons.org/licenses/by/4.0/",
+)
+rp.write_ro_crate_metadata(crate, "dist/ro-crate-metadata.json")
+```
+
+The converter links declared artifacts, hashes, profile identity, sources, and optional
+people from the manifest. It is a metadata projection, not a complete archive builder.
+
+## What a bundle proves
+
+The manifest records the profile coordinate/digest, source references and caveats,
+target metadata, emitted artifact paths, formats, byte counts, SHA-256 hashes, reports,
+and the author metadata supported by the bridge. It does not prove scientific
+correctness, authorship, venue acceptance, or that every official requirement has been
+encoded.
+
+Run a complete coverage-aware project check before building. A passing v1 bundle item
+report is phase-local; it must not override project-level missing live or manuscript
+evidence.

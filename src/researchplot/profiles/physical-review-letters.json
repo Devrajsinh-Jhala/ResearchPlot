@@ -1,0 +1,78 @@
+{
+  "schema_version": 3,
+  "id": "physical-review-letters",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "Physical Review Letters",
+  "kind": "journal",
+  "year": null,
+  "aliases": [
+    "prl",
+    "physical review letters"
+  ],
+  "scope": "PRL figure accessibility guidance.",
+  "default_width": null,
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The accessible PRL author page does not state exact figure widths; no physical geometry is claimed."
+  ],
+  "sources": [
+    {
+      "id": "prl-author-guidelines",
+      "title": "Physical Review Letters publishing guidelines",
+      "url": "https://journals.aps.org/prl/authors",
+      "locator": "Accessibility requirements for figures",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "Physical Review Letters publishing guidelines",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "accessibility.non_color_distinctions",
+      "level": "required",
+      "probe": "color.non_color_distinctions",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "prl-author-guidelines"
+      ],
+      "description": "Use words or symbols rather than color alone to convey meaning.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

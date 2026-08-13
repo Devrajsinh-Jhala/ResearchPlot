@@ -1,0 +1,237 @@
+{
+  "schema_version": 3,
+  "id": "usenix-osdi-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "USENIX OSDI 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": [
+    "usenix",
+    "osdi",
+    "osdi 2026",
+    "usenix 2026"
+  ],
+  "scope": "OSDI 2026 paper figures under the official USENIX template.",
+  "default_width": "single",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "USENIX conference requirements vary; this profile is specifically pinned to OSDI 2026."
+  ],
+  "sources": [
+    {
+      "id": "usenix-template",
+      "title": "USENIX paper templates",
+      "url": "https://www.usenix.org/conferences/author-resources/paper-templates",
+      "locator": "7 x 9 inch text block, two columns, typography",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_template",
+      "publisher": "USENIX paper templates",
+      "archive_url": null,
+      "content_sha256": null
+    },
+    {
+      "id": "osdi-requirements",
+      "title": "OSDI 2026 requirements for authors",
+      "url": "https://www.usenix.org/conference/osdi26/requirements-authors",
+      "locator": "PDF and black-and-white figure requirements",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "OSDI 2026 requirements for authors",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.full",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 177.8,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "usenix-template"
+      ],
+      "description": "The template text block is 7 inches wide.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.width.single",
+      "level": "inferred",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 84.709,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "usenix-template"
+      ],
+      "description": "Single-column width is derived from the 7-inch block and 0.33-inch gutter.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "(7 - 0.33) / 2 inches, converted to millimetres."
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "required",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 228.6,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "usenix-template"
+      ],
+      "description": "The template text block is 9 inches high.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.body",
+      "level": "inferred",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 10,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "usenix-template"
+      ],
+      "description": "The template body typography is 10 point Times.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": "This is template body type; captions may have distinct documented sizing."
+    },
+    {
+      "id": "export.formats.pdf",
+      "level": "required",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "pdf"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "osdi-requirements"
+      ],
+      "description": "OSDI submissions must be PDF.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "accessibility.non_color_distinctions",
+      "level": "required",
+      "probe": "color.non_color_distinctions",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "osdi-requirements"
+      ],
+      "description": "Graphs and figures must be readable in black and white.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

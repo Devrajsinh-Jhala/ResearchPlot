@@ -1,199 +1,165 @@
-# Migrate from 0.2 to 1.0
+# Migrate to ResearchPlot 2.0
 
-ResearchPlot 1.0 is intentionally breaking. It replaces loosely coupled venue/style
-arguments and binary pass semantics with one target, typed intent, tri-state reports,
-and post-audited transactional exports.
+ResearchPlot 2.0 keeps the v1 workflow available throughout 2.x, but the primary model
+is a strict schema-v3 project with explicit deliverables and phase coverage. No
+compatibility surface is removed before 3.0.
 
-## Before upgrading
+## Recommended migration sequence
 
-1. Pin the last `0.2` release in a clean branch.
-2. Make existing figure generation deterministic and commit representative outputs.
-3. Replace top-level plotting wrappers with direct Matplotlib calls.
-4. Upgrade Python to 3.11 or newer.
-5. Read the profile sources and select exact 1.0 coordinates.
-
-Install the new release:
-
-```bash
-python -m pip install --upgrade "researchplot-venues>=1,<2"
+```mermaid
+flowchart LR
+    V1["Keep v1 config unchanged"] --> M["Run migrate"]
+    M --> R["Review schema-v3 output"]
+    R --> L["Create and commit profile lock"]
+    L --> C["Run coverage-aware check"]
+    C --> F["Add missing live/bundle evidence"]
+    F --> CI["Enable frozen complete CI"]
 ```
 
-The distribution, import, and CLI names do not change.
+1. Upgrade in a branch and keep the original v1 config.
+2. Run `researchplot migrate`; the default output is separate and does not overwrite
+   the source.
+3. Review generated figure IDs, profile coordinate, paths, content roles, captions,
+   alt text, source data, and selected deliverables.
+4. Add panels, long descriptions, data tables, attachments, manuscript data, and any
+   manual evidence that v1 could not represent.
+5. Create a profile lock and run a frozen check.
+6. Treat new `INDETERMINATE` results as missing evidence, not regressions to suppress.
 
-## API map
+## Python migration bridge
 
-| 0.2 | 1.0 | Why it changed |
+```python
+import researchplot as rp
+
+legacy = rp.ProjectConfig.load("researchplot.toml")
+spec = rp.project_spec_from_v1(legacy)
+project = rp.Project(spec)
+```
+
+Or load directly through the compatibility bridge:
+
+```python
+project = rp.project_from_v1("researchplot.toml")
+```
+
+These functions warn that `ProjectConfig` is a 1.x model. They do not edit the source
+file.
+
+The translator preserves the profile coordinate, policy, artifact path/format, role,
+width, content, caption, alt text, and one source-data path. It derives stable figure
+IDs from filenames and creates one required/preferred deliverable per v1 figure.
+
+It cannot infer panel structure, figure numbering, long descriptions, accessible data
+tables, arbitrary attachments, manuscript matching hints, typed reviewer evidence,
+waiver expiry, or intended companion files. Add those deliberately.
+
+## API mapping
+
+| v1-compatible call | v2 primary call | Reason |
 | --- | --- | --- |
-| `rp.use(venue, width=...)` | `rp.target(...).style()` | Target binds role, width, and content once. |
-| `validate_figure(fig, venue=..., width=...)` | `target.validate(fig)` | Prevent validation/export target mismatch. |
-| `audit_file(path, venue=..., artwork=...)` | `target.audit(path)` | Uses typed content and output format separately. |
-| `export_figure(...) -> list[Path]` | `target.export(...) -> ExportResult` | Returns report and manifest; verifies written files. |
-| `ArtworkType` | `ContentKind` + `OutputFormat` | Artwork semantics and file representation are different dimensions. |
-| `report.passed: bool` | `report.verdict: Verdict` | A skipped required check is indeterminate, not passed. |
-| Combined check status/severity | `Outcome` and `RuleLevel` | Recommendation failures are distinct from required failures. |
-| Mutable publisher profile name | `<id>@<revision>` coordinate | Published rule evidence is immutable and reproducible. |
-| `researchplot venues ...` | `researchplot profile ...` | Profiles are versioned evidence, not just venue names. |
-| Top-level plotting helpers | Direct Matplotlib | The core focuses on compliance, audit, and bundles. |
+| `rp.target(profile, ...)` | `rp.Project.load(...).figure(id)` | Figure intent belongs to a project and deliverable graph. |
+| `target.validate(fig)` | `figure.check(fig=fig)` | Adds configured file/bundle evidence and coverage. |
+| `target.audit(path)` | `figure.check()` or CLI artifact audit | A project can disclose missing phases. |
+| `target.export(fig, path)` | `figure.export(fig)` | Uses configured deliverables and export plan. |
+| `ProjectConfig.load(path)` | `Project.load(path)` | Loads strict schema version 3. |
+| `Submission(...)` | `project.bundle(directory)` | Uses project metadata; current implementation remains a v1 manifest bridge. |
+| `Report` | `PlanAssessment` / `ValidationReport` | Adds coverage and capability gaps. |
 
-## Style context
+The lower-level calls remain valid when a phase-local result is exactly what you want.
 
-Before:
+## Configuration mapping
+
+### v1
+
+```toml
+profile = "nature@2026.08.0"
+policy = "complete"
+
+[[figures]]
+path = "figures/figure1.pdf"
+role = "main"
+width = "single"
+content = "line-art"
+alt_text = "A line chart rising across four inputs."
+source_data = "data/figure1.csv"
+```
+
+### v2 schema v3
+
+```toml
+schema_version = 3
+profile = "nature@2026.08.0"
+policy = "complete"
+lock = "researchplot.lock.json"
+
+[[figures]]
+id = "figure-1"
+role = "main"
+width = "single"
+content = "line-art"
+alt_text = "A line chart rising across four inputs."
+source_data = ["data/figure1.csv"]
+
+[[figures.deliverables]]
+id = "artifact"
+format = "pdf"
+path = "figures/figure1.pdf"
+required = true
+preferred = true
+```
+
+The profile must be exact. Figures and deliverables gain stable IDs. Source data becomes
+a list, although the current `Project.bundle()` bridge still accepts only one source
+file per figure.
+
+## Verdict behavior
+
+The most important breaking behavior is intentional: a passing file-phase report no
+longer implies a compliant project.
 
 ```python
-with rp.use("nature", width="single") as style:
-    fig, ax = style.subplots()
-    ax.plot(x, y)
+raw_file_report = figure.audit("figures/figure1.pdf")
+coverage_report = figure.check()
 ```
 
-After:
+The first answers what the file establishes. The second also asks whether every
+required phase was covered. Automation must handle CLI exit code `3` separately from a
+known venue violation (`1`) and invalid/unsafe input (`2`).
 
-```python
-target = rp.target(
-    "nature@2026.08.0",
-    role="main",
-    width="single",
-    content="line-art",
-)
+## Legacy plotting helpers
 
-with target.style() as style:
-    fig, ax = style.subplots(aspect=0.62)
-    ax.plot(x, y)
-```
-
-The new context rejects an explicit height or `figsize` that contradicts the target;
-`0.2` could silently clamp or override dimensions.
-
-## Validation decisions
-
-Before:
-
-```python
-report = rp.validate_figure(fig, venue="nature", width="single")
-if report.passed:
-    publish()
-```
-
-After:
-
-```python
-report = target.validate(fig)
-
-if report.verdict is rp.Verdict.COMPLIANT:
-    publish()
-elif report.verdict is rp.Verdict.INDETERMINATE:
-    request_manual_review(report.unresolved)
-else:
-    fix_required_failures(report.failures)
-```
-
-Do not replace `report.passed` with `report.verdict != NON_COMPLIANT`; that recreates
-the `0.2` bug by treating unresolved required evidence as success.
-
-## Artwork versus output format
-
-`0.2` used values such as `vector`, `halftone`, and `line_art` in one enum even though
-they represented two concepts.
-
-In 1.0:
-
-```python
-target = rp.target(..., content=rp.ContentKind.LINE_ART)
-result = target.export(fig, "figure1.pdf")  # PDF is inferred from the path
-```
-
-Content selects artwork-specific rules. The output suffix or an explicit
-`OutputFormat` selects serialization rules.
-
-## Export behavior
-
-Before:
-
-```python
-paths = style.export(fig, "figure1", artwork="vector")
-```
-
-After:
-
-```python
-result = target.export(fig, "figure1.pdf", policy="complete")
-paths = result.paths
-report = result.report
-manifest = result.manifest
-```
-
-The new pipeline checks the live figure, writes candidates in staging, audits the
-actual files, applies policy, and commits with rollback for handled failures. Multi-file
-destinations are replaced sequentially, so abrupt process termination and
-non-cooperating concurrent writers remain outside that guarantee. Existing code must
-choose an explicit suffix rather than relying on an artwork label to imply file
-representations.
-
-## Profile resolution
-
-Before:
-
-```python
-profile = rp.resolve_venue("cvpr")
-```
-
-After:
-
-```python
-profile = rp.resolve_profile("cvpr-2026@2026.08.0")
-```
-
-Unpinned queries still help with discovery but warn. Commit an exact coordinate and
-profile lock for reproducible work.
-
-## CLI migration
-
-```text
-# 0.2
-researchplot venues list
-researchplot venues info nature
-researchplot audit figure.pdf --venue nature --width single --artwork vector
-
-# 1.0
-researchplot profile list
-researchplot profile show nature@2026.08.0
-researchplot check figure.pdf --profile nature@2026.08.0 \
-  --role main --width single --content line-art
-```
-
-Exit code `3` is new and means required checks are unresolved. Update scripts that
-previously assumed every nonzero result was a known violation.
-
-## Legacy plotting wrappers
-
-Functions such as `bar`, `line`, `pairplot`, and `roc_curve` are no longer exported as
-the primary package API. During migration, install the optional compatibility surface:
+Install the optional bridge only while migrating:
 
 ```bash
-python -m pip install "researchplot-venues[plots]==0.2.1"
+python -m pip install "researchplot-venues[plots]"
 ```
 
-Then import explicitly from `researchplot.plots` where the installed release provides
-the frozen wrappers. They retain deprecation warnings and do not receive new compliance
-features. Replace them with direct Matplotlib/Seaborn calls before relying on 1.x long
-term.
+Legacy functions are available lazily at the top level and from `researchplot.plots`.
+They preserve their historical signatures and display behavior, return composable
+Matplotlib/Seaborn objects, and emit deprecation warnings once per process. Missing
+Seaborn, pandas, NumPy, SciPy, or scikit-learn dependencies produce a targeted install
+message when the relevant helper is called.
 
 ```python
-# Legacy
-fig, ax = researchplot.line(x, y, "Time", "Accuracy", show=False)
+# Compatibility bridge
+fig, ax = rp.line(x, y, "Time", "Accuracy", show=False)
 
-# Native Matplotlib
-with target.style() as style:
+# Preferred v2 authoring
+with project.figure("figure-1").style() as style:
     fig, ax = style.subplots()
     ax.plot(x, y)
     ax.set(xlabel="Time", ylabel="Accuracy")
 ```
 
-## Create a project contract
+New compliance features are developed around native Matplotlib composition, not the
+legacy plotting grammar.
 
-After individual figures work, add `researchplot.toml`, run
-`researchplot profile lock nature@2026.08.0`, and commit both files. The configuration
-makes CI and local checks use the same target metadata; the lock is an evidence snapshot
-and the package version should also be pinned because 1.0 does not enforce the lock
-automatically.
+## Manifest compatibility
 
-See [Project configuration](configuration.md) and [Compliance reports](compliance.md).
+Readers for v1 reports, export manifests, submission manifests, locks, and profile-v2
+data remain available during 2.x. The current project bundle writer still uses the v1
+submission manifest and rejects unrepresentable richer data. Do not assume every
+schema-v3 field appears in that manifest.
+
+Pin `researchplot-venues` in CI while migrating and retain both original and translated
+configuration until the v2 report has been reviewed.

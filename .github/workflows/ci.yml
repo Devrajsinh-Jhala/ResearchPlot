@@ -13,16 +13,17 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
           cache: pip
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install -e ".[dev,plots,registry]"
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m mypy src
       - run: python scripts/generate_contract_schemas.py --check
+      - run: python scripts/generate_profile_docs.py --check
 
   test:
     runs-on: ${{ matrix.os }}
@@ -43,19 +44,19 @@ jobs:
     env:
       MPLBACKEND: Agg
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install -e ".[dev,plots,registry]"
       - run: python -m pytest
 
   artifacts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
           cache: pip
@@ -67,14 +68,20 @@ jobs:
           python -m venv /tmp/researchplot-wheel
           /tmp/researchplot-wheel/bin/python -m pip install dist/*.whl
           /tmp/researchplot-wheel/bin/researchplot profile list
-          /tmp/researchplot-wheel/bin/python -c "import researchplot as rp; assert len(rp.list_profiles()) == 9; assert rp.report_schema()['title']; assert rp.export_manifest_schema()['title']; assert rp.submission_manifest_schema()['title']"
-          /tmp/researchplot-wheel/bin/python -c "import importlib.resources as r; assert r.files('researchplot').joinpath('py.typed').is_file()"
+          /tmp/researchplot-wheel/bin/python -c "import researchplot as rp; assert len(rp.list_profiles()) == 22; assert rp.report_schema()['title']; assert rp.validation_report_schema()['properties']['schema_version']['const'] == 2; assert rp.project_schema()['properties']['schema_version']['const'] == 3"
+          /tmp/researchplot-wheel/bin/python -c "import importlib.resources as r; root=r.files('researchplot'); assert root.joinpath('py.typed').is_file(); assert root.joinpath('web_assets','index.html').is_file(); assert root.joinpath('profile.schema.json').is_file()"
+      - name: Install all wheel extras
+        run: |
+          python -m venv /tmp/researchplot-extras
+          wheel="$(find dist -name '*.whl' -print -quit)"
+          /tmp/researchplot-extras/bin/python -m pip install "${wheel}[plots,registry,web,manuscript,accessibility]"
+          /tmp/researchplot-extras/bin/python -c "import pandas, scipy, seaborn, sklearn, tuf; import researchplot.plots"
       - name: Install and smoke-test sdist
         run: |
           python -m venv /tmp/researchplot-sdist
           /tmp/researchplot-sdist/bin/python -m pip install dist/*.tar.gz
           /tmp/researchplot-sdist/bin/python -c "import researchplot as rp; assert rp.resolve_profile('nature@2026.08.0').width_mm() == 89"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: distributions
           path: dist/
@@ -84,14 +91,14 @@ jobs:
     env:
       MPLBACKEND: Agg
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
           cache: pip
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install -e ".[dev,plots,registry]"
       - run: python -m pytest --cov-report=xml
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: coverage-report
           path: coverage.xml
@@ -101,14 +108,14 @@ jobs:
     env:
       MPLBACKEND: Agg
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install .
       - run: python examples/regression_gallery.py
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: linux-regression-gallery
           path: build/regression-gallery/

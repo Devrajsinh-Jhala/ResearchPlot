@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "cvpr-2026",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -22,7 +22,11 @@
       "url": "https://cvpr.thecvf.com/Conferences/2026/AuthorGuidelines",
       "locator": "Author guidelines: paper formatting",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "CVPR 2026",
+      "archive_url": null,
+      "content_sha256": null
     },
     {
       "id": "cvpr-kit",
@@ -30,7 +34,11 @@
       "url": "https://github.com/cvpr-org/author-kit/releases/tag/CVPR2026-v1%28latex%29",
       "locator": "CVPR 2026 LaTeX author kit: cvpr.sty",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_template",
+      "publisher": "CVPR 2026",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -57,7 +65,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "CVPR single-column width derived from the official author kit."
+      "description": "CVPR single-column width derived from the official author kit.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.double",
@@ -82,7 +93,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "CVPR full two-column text width."
+      "description": "CVPR full two-column text width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.family",
@@ -106,7 +120,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "Match the author kit's Times typography."
+      "description": "Match the author kit's Times typography.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.min",
@@ -126,7 +143,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "Figure text should remain comparable to 9-point captions and 10-point body text."
+      "description": "Figure text should remain comparable to 9-point captions and 10-point body text.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.target",
@@ -146,7 +166,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "Resize figure fonts to match body text."
+      "description": "Resize figure fonts to match body text.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "line.width.min",
@@ -166,7 +189,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "Conservative line width that renders effectively in print."
+      "description": "Conservative line width that renders effectively in print.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.type3.prohibited",
@@ -190,7 +216,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "Avoid Type 3 fonts so PDF artwork remains scalable."
+      "description": "Avoid Type 3 fonts so PDF artwork remains scalable.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.pdf.embedding.recommended",
@@ -214,7 +243,10 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "Embed all fonts used in PDF artwork."
+      "description": "Embed all fonts used in PDF artwork.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.vector",
@@ -242,7 +274,25 @@
       "source_ids": [
         "cvpr-kit"
       ],
-      "description": "Use scalable vector artwork in the LaTeX paper."
+      "description": "Use scalable vector artwork in the LaTeX paper.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

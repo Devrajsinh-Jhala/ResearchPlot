@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,6 +9,7 @@ from typing import Any, cast
 
 from .compliance import Policy
 from .models import ContentKind, FigureRole, VenueProfile
+from .profile_lock import write_profile_lock as write_profile_lock
 from .registry import resolve_profile
 from .target import coerce_content, coerce_role
 
@@ -122,23 +122,3 @@ class ProjectConfig:
                 )
             )
         return cls(config_path, profile, policy, tuple(figures))
-
-
-def write_profile_lock(
-    profile: VenueProfile,
-    path: str | Path = "researchplot.lock.json",
-) -> Path:
-    """Write a deterministic lock for one resolved profile revision."""
-
-    output = Path(path)
-    data = {
-        "schema_version": 1,
-        "profile": str(getattr(profile, "coordinate", profile.id)),
-        "digest": str(getattr(profile, "digest", "")),
-        "sources": [source.to_dict() for source in profile.sources],
-    }
-    output.write_text(
-        json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
-    return output

@@ -33,20 +33,35 @@ EXPECTED_WIDTHS = {
     "cvpr-2026": {"single": 83.34375, "double": 174.625},
     "acl-2026": {"single": 77.0, "double": 160.0},
     "plos-biology": {"text-column": 132.0, "full": 190.5},
+    "acs-generic": {"single": 82.55, "double": 177.8},
+    "colm-2026": {"full": 139.7},
+    "usenix-osdi-2026": {"single": 84.709, "full": 177.8},
+    "aistats-2026": {"single": 82.55, "double": 171.45},
+    "cell-graphical-abstract": {"square": 139.7},
+    "eccv-2026": {"full": 122.0},
+    "iclr-2026": {"full": 139.7},
+    "jacs": {"single": 82.55, "double": 177.8},
+    "jmlr": {"full": 152.4},
+    "tmlr": {"full": 165.1},
 }
 
-EXPECTED_PROFILE_IDS = set(EXPECTED_WIDTHS) | {"acm-acmart"}
+EXPECTED_PROFILE_IDS = set(EXPECTED_WIDTHS) | {
+    "aaai-2026",
+    "aas-journals",
+    "acm-acmart",
+    "physical-review-letters",
+}
 
 
 def test_version_matches_distribution_metadata() -> None:
     assert rp.__version__ == version("researchplot-venues")
 
 
-def test_catalog_contains_source_backed_schema_v2_profiles() -> None:
+def test_catalog_contains_source_backed_schema_v3_profiles() -> None:
     profiles = rp.list_profiles()
     assert {profile.id for profile in profiles} == EXPECTED_PROFILE_IDS
     for profile in profiles:
-        assert profile.schema_version == 2
+        assert profile.schema_version == 3
         assert profile.coordinate == f"{profile.id}@2026.08.0"
         assert len(profile.digest) == 64
         assert date.fromisoformat(profile.verified_on)
@@ -122,9 +137,15 @@ def test_list_and_search_filters() -> None:
     conferences = rp.list_profiles(kind="conference", year=2026)
     assert {profile.id for profile in conferences} == {
         "acl-2026",
+        "aaai-2026",
+        "aistats-2026",
         "cvpr-2026",
+        "colm-2026",
+        "eccv-2026",
+        "iclr-2026",
         "icml-2026",
         "neurips-2026",
+        "usenix-osdi-2026",
     }
     assert [profile.id for profile in rp.search_profiles("electrical")] == ["ieee-journal"]
 
@@ -193,7 +214,8 @@ def test_pinned_coordinates_are_reproducible_and_unpinned_queries_warn() -> None
 def test_profile_schema_is_bundled_and_offline() -> None:
     schema = registry.profile_schema()
     assert schema["$schema"].endswith("2020-12/schema")
-    assert schema["properties"]["schema_version"] == {"const": 2}
+    assert schema["properties"]["schema_version"] == {"const": 3}
+    assert registry.profile_schema(2)["properties"]["schema_version"] == {"const": 2}
     schema["title"] = "mutated copy"
     assert registry.profile_schema()["title"] == "ResearchPlot venue profile"
 
@@ -330,7 +352,7 @@ def test_installed_profile_pack_entry_point_is_discovered(
     registry.clear_profile_cache()
     try:
         installed = registry.list_profiles()
-        assert len(installed) == 10
+        assert len(installed) == len(EXPECTED_PROFILE_IDS) + 1
         assert registry.resolve_profile("external-journal@2026.08.0").name == "External Journal"
     finally:
         registry.clear_profile_cache()

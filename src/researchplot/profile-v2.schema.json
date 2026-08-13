@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://researchplot.dev/schema/profile-v2.json",
+  "title": "ResearchPlot venue profile",
+  "description": "Offline, source-backed venue compliance profile schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "revision",
+    "effective_date",
+    "name",
+    "kind",
+    "year",
+    "aliases",
+    "scope",
+    "default_width",
+    "verified_on",
+    "caveats",
+    "sources",
+    "rules"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "revision": {"type": "string", "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]+$"},
+    "effective_date": {"type": "string", "format": "date"},
+    "name": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["journal", "conference", "publisher"]},
+    "year": {"type": ["integer", "null"]},
+    "aliases": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "scope": {"type": "string", "minLength": 1},
+    "default_width": {"type": ["string", "null"], "minLength": 1},
+    "verified_on": {"type": "string", "format": "date"},
+    "caveats": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/source"}
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/rule"}
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "url", "locator", "retrieved_on", "verified_on"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "title": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "pattern": "^https://"},
+        "locator": {"type": "string", "minLength": 1},
+        "retrieved_on": {"type": "string", "format": "date"},
+        "verified_on": {"type": "string", "format": "date"}
+      }
+    },
+    "constraintValue": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"type": "null"},
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "number"},
+          "uniqueItems": true
+        }
+      ]
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "value", "unit", "tolerance"],
+      "properties": {
+        "operator": {
+          "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "not_in", "between", "subset", "contains", "not_contains", "approx", "required", "prohibited"]
+        },
+        "value": {"$ref": "#/$defs/constraintValue"},
+        "unit": {"type": ["string", "null"]},
+        "tolerance": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {"enum": ["main", "extended_data", "supplementary", "graphical_abstract"]},
+          "uniqueItems": true
+        },
+        "content_kinds": {
+          "type": "array",
+          "items": {"enum": ["data_visualization", "line_art", "halftone", "combination", "photograph"]},
+          "uniqueItems": true
+        },
+        "output_formats": {
+          "type": "array",
+          "items": {"enum": ["pdf", "eps", "svg", "png", "jpeg", "tiff"]},
+          "uniqueItems": true
+        },
+        "widths": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "level",
+        "probe",
+        "constraint",
+        "applies_to",
+        "verification",
+        "phases",
+        "source_ids",
+        "description"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9_]+(?:\\.[a-z0-9_-]+)+$"},
+        "level": {"enum": ["required", "recommended", "inferred"]},
+        "probe": {"type": "string", "pattern": "^[a-z0-9_]+(?:\\.[a-z0-9_]+)+$"},
+        "constraint": {"$ref": "#/$defs/constraint"},
+        "applies_to": {"$ref": "#/$defs/applicability"},
+        "verification": {"enum": ["automated", "manual", "unsupported"]},
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"enum": ["live", "file", "bundle"]},
+          "uniqueItems": true
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "description": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

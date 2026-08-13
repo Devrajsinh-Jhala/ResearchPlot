@@ -1,0 +1,256 @@
+{
+  "schema_version": 3,
+  "id": "acs-generic",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "American Chemical Society generic artwork",
+  "kind": "publisher",
+  "year": null,
+  "aliases": [
+    "acs",
+    "american chemical society"
+  ],
+  "scope": "Generic ACS journal artwork guidance.",
+  "default_width": "single",
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "Individual ACS journals and article types may override this generic artwork guidance."
+  ],
+  "sources": [
+    {
+      "id": "acs-artwork",
+      "title": "ACS Graphics Preparation",
+      "url": "https://pubs.acs.org/page/4authors/submission/graphics_prep.html",
+      "locator": "Sizing, typography, lines, and resolution",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_guideline",
+      "publisher": "ACS Graphics Preparation",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "figure.width.single",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 82.55,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "acs-artwork"
+      ],
+      "description": "Single-column graphics are 3.25 inches wide.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.width.double",
+      "level": "required",
+      "probe": "artifact.width_mm",
+      "constraint": {
+        "operator": "approx",
+        "value": 177.8,
+        "unit": "mm",
+        "tolerance": 0.5
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "acs-artwork"
+      ],
+      "description": "Double-column graphics are 7 inches wide.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "figure.height.maximum",
+      "level": "required",
+      "probe": "artifact.height_mm",
+      "constraint": {
+        "operator": "lte",
+        "value": 241.3,
+        "unit": "mm",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live",
+        "file"
+      ],
+      "source_ids": [
+        "acs-artwork"
+      ],
+      "description": "Graphics must not exceed 9.5 inches in height.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.minimum",
+      "level": "required",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 5,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "acs-artwork"
+      ],
+      "description": "Lettering must be at least 5 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.family.allowed",
+      "level": "recommended",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Arial",
+          "Helvetica"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "acs-artwork"
+      ],
+      "description": "Use Arial or Helvetica lettering.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "line.width.minimum",
+      "level": "required",
+      "probe": "line.width.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 1,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "acs-artwork"
+      ],
+      "description": "Lines should be at least 1 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.min_dpi.recommended",
+      "level": "recommended",
+      "probe": "artifact.dpi",
+      "constraint": {
+        "operator": "gte",
+        "value": 600,
+        "unit": "dpi",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [
+          "png",
+          "jpeg",
+          "tiff"
+        ],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "acs-artwork"
+      ],
+      "description": "ACS recommends at least 600 DPI for best results.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

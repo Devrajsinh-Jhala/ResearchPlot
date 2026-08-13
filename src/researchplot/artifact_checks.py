@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
 
+from .api_types import EvidencePhase
 from .compliance import Finding, Outcome, Report, RuleEngine
 from .inspectors import ArtifactInspection, inspect_artifact
 from .models import RuleLevel
@@ -15,7 +16,16 @@ from .target import Target
 
 def _observation_set(inspection: ArtifactInspection) -> ObservationSet:
     observations = [
-        Observation(item.key, item.value, phase="file") for item in inspection.observations
+        Observation(
+            item.key,
+            item.value,
+            phase="file",
+            unit=item.unit,
+            producer=f"researchplot.artifact.{inspection.format}",
+            supported_phases=(EvidencePhase.FILE,),
+            supported_formats=(inspection.format,),
+        )
+        for item in inspection.observations
     ]
     metadata = inspection.metadata
     dpi_values = [
@@ -29,6 +39,10 @@ def _observation_set(inspection: ArtifactInspection) -> ObservationSet:
             min(dpi_values) if dpi_values else None,
             available=bool(dpi_values),
             phase="file",
+            unit="dpi",
+            producer=f"researchplot.artifact.{inspection.format}",
+            supported_phases=(EvidencePhase.FILE,),
+            supported_formats=(inspection.format,),
             detail="Raster DPI metadata is unavailable for this artifact."
             if not dpi_values
             else None,
@@ -43,6 +57,9 @@ def _observation_set(inspection: ArtifactInspection) -> ObservationSet:
             else None,
             available=isinstance(font_names, tuple) and bool(font_names),
             phase="file",
+            producer=f"researchplot.artifact.{inspection.format}",
+            supported_phases=(EvidencePhase.FILE,),
+            supported_formats=(inspection.format,),
             detail="Computed font families are unavailable for this artifact format.",
         )
     )

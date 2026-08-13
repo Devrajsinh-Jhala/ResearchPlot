@@ -1,0 +1,82 @@
+{
+  "schema_version": 3,
+  "id": "aaai-2026",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "AAAI 2026",
+  "kind": "conference",
+  "year": 2026,
+  "aliases": [
+    "aaai",
+    "aaai 26",
+    "aaai-26"
+  ],
+  "scope": "AAAI-26 PDF font technology requirement.",
+  "default_width": null,
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "The accessible submission page establishes PDF font technology but not standalone figure dimensions.",
+    "This profile therefore cannot create a venue-sized style."
+  ],
+  "sources": [
+    {
+      "id": "aaai-2026-submission",
+      "title": "AAAI-26 Submission Instructions",
+      "url": "https://aaai.org/conference/aaai/aaai-26/submission-instructions/",
+      "locator": "High-resolution PDF using Type 1 or TrueType fonts",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_policy",
+      "publisher": "AAAI-26 Submission Instructions",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "pdf.fonts.no_type3",
+      "level": "required",
+      "probe": "pdf.type3_font_count",
+      "constraint": {
+        "operator": "eq",
+        "value": 0,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [
+          "pdf"
+        ],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "aaai-2026-submission"
+      ],
+      "description": "AAAI-26 permits Type 1 or TrueType fonts, not Type 3 fonts.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

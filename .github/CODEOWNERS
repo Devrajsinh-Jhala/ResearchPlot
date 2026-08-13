@@ -1,0 +1,5 @@
+# Profile and release trust boundaries require an explicit maintainer review.
+/src/researchplot/profiles/ @Devrajsinh-Jhala
+/src/researchplot/profile.schema.json @Devrajsinh-Jhala
+/schemas/ @Devrajsinh-Jhala
+/.github/workflows/release.yml @Devrajsinh-Jhala

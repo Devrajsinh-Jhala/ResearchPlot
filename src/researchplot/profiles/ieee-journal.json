@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "id": "ieee-journal",
   "revision": "2026.08.0",
   "effective_date": "2026-08-02",
@@ -24,7 +24,11 @@
       "url": "https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/resolution-and-size/",
       "locator": "Resolution and Size",
       "retrieved_on": "2026-08-02",
-      "verified_on": "2026-08-02"
+      "verified_on": "2026-08-02",
+      "kind": "official_guideline",
+      "publisher": "IEEE Journal",
+      "archive_url": null,
+      "content_sha256": null
     }
   ],
   "rules": [
@@ -51,7 +55,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "IEEE one-column figure width."
+      "description": "IEEE one-column figure width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "figure.width.double",
@@ -76,7 +83,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "IEEE two-column figure width."
+      "description": "IEEE two-column figure width.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "font.size.target",
@@ -96,7 +106,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Conservative readable default at final size; confirm with the journal."
+      "description": "Conservative readable default at final size; confirm with the journal.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "line.width.min",
@@ -116,7 +129,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Conservative line-weight floor for print reproduction."
+      "description": "Conservative line-weight floor for print reproduction.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "color.grayscale.distinguishable",
@@ -136,7 +152,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Use non-color distinctions when grayscale reproduction is possible."
+      "description": "Use non-color distinctions when grayscale reproduction is possible.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.vector",
@@ -164,7 +183,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "IEEE lists PDF, EPS, and PS as acceptable vector formats."
+      "description": "IEEE lists PDF, EPS, and PS as acceptable vector formats.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.halftone",
@@ -193,7 +215,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Common raster containers; confirm the target journal's accepted formats."
+      "description": "Common raster containers; confirm the target journal's accepted formats.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.combination",
@@ -220,7 +245,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Common containers for mixed artwork."
+      "description": "Common containers for mixed artwork.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.formats.line_art",
@@ -248,7 +276,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Prefer vector formats for line art."
+      "description": "Prefer vector formats for line art.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.min_dpi.halftone",
@@ -278,7 +309,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Color and grayscale non-vector graphics must exceed 300 DPI."
+      "description": "Color and grayscale non-vector graphics must exceed 300 DPI.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.min_dpi.combination",
@@ -307,7 +341,10 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Mixed non-vector graphics must meet the color/grayscale floor."
+      "description": "Mixed non-vector graphics must meet the color/grayscale floor.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     },
     {
       "id": "export.min_dpi.line_art",
@@ -336,7 +373,25 @@
       "source_ids": [
         "ieee-size"
       ],
-      "description": "Black-and-white line art must exceed 600 DPI."
+      "description": "Black-and-white line art must exceed 600 DPI.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
     }
-  ]
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-02",
+    "change_note": "Migrated to schema v3 without changing venue rules."
+  }
 }

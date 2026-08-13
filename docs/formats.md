@@ -1,108 +1,159 @@
-# Manifest and report formats
+# Reports, manifests, and archives
 
-ResearchPlot emits versioned JSON for programmatic use and SARIF 2.1.0 for compatible
-code-scanning systems. Human text output is intentionally not a machine contract.
-The immutable v1 [report schema](https://raw.githubusercontent.com/Devrajsinh-Jhala/ResearchPlot/v1.0.0/schemas/report.schema.json),
-[single-export manifest schema](https://raw.githubusercontent.com/Devrajsinh-Jhala/ResearchPlot/v1.0.0/schemas/export-manifest.schema.json),
-and [submission-bundle manifest schema](https://raw.githubusercontent.com/Devrajsinh-Jhala/ResearchPlot/v1.0.0/schemas/submission-manifest.schema.json)
-are bundled in the wheel and available through `rp.report_schema()`,
-`rp.export_manifest_schema()`, and `rp.submission_manifest_schema()`. Manifest schemas
-contain only local JSON pointers, so validation remains offline.
+ResearchPlot emits versioned JSON for programs, SARIF 2.1.0 for code scanning, and
+self-contained HTML for human review. Human terminal text is not a machine contract.
 
-## Validation report
+## Coverage-aware report schema v2
 
-Use `Report.to_dict()` in Python:
+`Project.check()` and `ExecutablePlan.check()` return `PlanAssessment`. Its dictionary
+form has `schema_version: 2` and contains:
+
+- exact profile coordinate and digest;
+- deterministic compliance-plan digest;
+- tri-state verdict and summary counts;
+- unique official source records;
+- flat findings and remediation strings;
+- coverage requirements with satisfied/failed/unresolved/missing status;
+- capability gaps;
+- privacy-safe environment provenance (versions, backend, font-family settings,
+  LaTeX availability, rcParams digest, and inspector protocol; no username/hostname);
+- the live/file/bundle phase reports that supplied the evidence.
 
 ```python
-payload = result.report.to_dict()
+project = rp.Project.load("researchplot.toml")
+report = project.plan(frozen=True).check()
+payload = report.to_dict()
 ```
 
-CLI `--format json` returns a batch list of `{"path": ..., "report": ...}` objects,
-including when only one artifact is checked. Validate each nested `report` value against
-the report schema; the outer list is a transport envelope rather than a report.
+The strict schema is bundled in the wheel and available without network access:
 
-The report representation includes:
+```python
+schema = rp.validation_report_schema()
+```
 
-- its schema version;
-- final verdict and target metadata;
-- exact profile coordinate, digest, target context, and profile caveats;
-- one entry per applicable or evaluated check;
-- rule level, outcome, verification mode, and message;
-- expected and observed values;
-- full source records with IDs, titles, URLs, locators, and verification dates;
-- remediation suggestion where one is reliable;
-- originating artifact path or live-figure stage where applicable.
+Treat `schema_version` as mandatory and validate the complete payload before consuming
+coverage or provenance fields.
 
-The v1 schemas are strict and reject unknown fields. Consumers should check the
-schema-version field before assuming a structure and compare enum values exactly. They
-should not parse the human-readable `message` to recover values exposed separately.
+## Compatibility report schema v1
 
-`Target.export()` writes a sidecar single-export manifest containing one target,
-artifact records, caller metadata, and its combined live/file report. Its Python type is
-`ExportManifest`.
+`Target.validate()`, `Target.audit()`, and `Target.export().report` use the v1 `Report`
+model. Its published schema remains available through:
 
-## Bundle manifest
+```python
+schema = rp.report_schema()
+```
 
-`researchplot-manifest.json` describes the exact bundle that was committed:
+The v1 report includes target context, exact profile identity, verdict, profile
+caveats, findings, expected/observed values, source metadata, and suggestions. It is
+phase-local and must not be treated as project-wide coverage.
+
+When the CLI audits multiple artifacts, JSON output wraps reports in a transport list
+with each artifact path. Validate the nested report, not the transport envelope,
+against the v1 report schema.
+
+## Export manifest
+
+`FigureTarget.export()` and `Target.export()` write a sidecar single-export manifest
+for the live/file export transaction. Its schema is available through:
+
+```python
+schema = rp.export_manifest_schema()
+```
+
+The manifest records the package version, profile identity, target intent, artifacts,
+hashes, metadata, and the combined v1 report. Schema-v3 figure metadata such as figure
+ID, number, caption, short/long description, and waivers is added to the export metadata
+when exporting through `FigureTarget`.
+
+## Submission manifest
+
+`Submission.build()` and the current `Project.bundle()` bridge write
+`researchplot-manifest.json`. Its schema is available through:
+
+```python
+schema = rp.submission_manifest_schema()
+```
 
 ```mermaid
 flowchart TD
-    M["Manifest schema version"] --> P["Profile coordinate + digest"]
-    M --> E["ResearchPlot version"]
-    M --> F1["Figure 1"]
-    M --> F2["Figure 2"]
-    F1 --> T1["Target + descriptive metadata"]
-    F1 --> C1["Checks + attestations"]
-    F1 --> A1["Artifact path + SHA-256"]
-    F2 --> T2["Target + descriptive metadata"]
-    F2 --> C2["Checks + attestations"]
-    F2 --> A2["Artifact path + SHA-256"]
+    M["Manifest schema + package version"] --> P["Profile coordinate + digest"]
+    M --> S["Official sources + caveats"]
+    M --> F1["Figure item"]
+    F1 --> T1["Target + author metadata"]
+    F1 --> R1["Phase-local report"]
+    F1 --> A1["Artifact paths + SHA-256"]
+    M --> A2["Copied source data + SHA-256"]
 ```
 
-Paths in a portable bundle are relative to its root. A supplied source-data file is
-copied into the bundle and hashed, but it is not parsed or scientifically validated.
+Paths are portable and relative to the bundle root. SHA-256 establishes byte identity,
+not scientific validity or provenance of authorship.
 
-SHA-256 lets a reviewer confirm byte identity. It does not establish that the content
-is correct or unmanipulated.
+The current bridge is manifest schema v1 and cannot represent every schema-v3 project
+field. In particular, multiple source-data files, generic attachments, typed
+attestation/waiver metadata, and full panel/long-description structures need the future v2
+bundle contract. The bridge rejects some unrepresentable projects rather than writing
+misleading metadata.
+
+## Manifest and archive verification
+
+```python
+directory_result = rp.verify_manifest("dist/submission")
+archive = rp.create_deterministic_archive(
+    "dist/submission",
+    "dist/submission.zip",
+)
+archive_result = rp.verify_deterministic_archive("dist/submission.zip")
+```
+
+Verification checks JSON shape and limits, safe relative paths, member type, size,
+digest, missing/extra artifacts, collisions, and deterministic ZIP or TAR metadata.
+Archives are inspected in place without extracting members. Traversal and symbolic-link
+entries are rejected.
+
+`create_deterministic_archive()` accepts `.zip` and uncompressed `.tar` destinations.
+It normalizes ordering, timestamps, ownership, and permissions and honors
+`SOURCE_DATE_EPOCH`; an invalid or out-of-range epoch is rejected. Transactional PDF and
+SVG exports normalize volatile producer/date metadata and SVG identifiers so repeated
+exports are byte-stable under the tested backend and dependency set.
 
 ## SARIF
 
 ```bash
-researchplot check --config researchplot.toml --format sarif > researchplot.sarif
+researchplot check --config researchplot.toml \
+  --format sarif \
+  --output build/researchplot.sarif
 ```
 
-ResearchPlot maps findings to SARIF levels without changing their native rule level or
-outcome in the attached properties. File-backed findings include artifact locations
-where possible. Project-level or live-figure findings may not have a source-code line.
+SARIF maps findings to scanner levels and retains ResearchPlot-specific properties.
+Do not derive a project verdict from SARIF severity alone; retain native JSON when
+coverage and the distinction between `NON_COMPLIANT` and `INDETERMINATE` matter.
 
-Do not derive the ResearchPlot verdict from SARIF severity alone. Preserve the native
-JSON report or manifest when downstream automation needs the full tri-state model.
-
-## Compatibility policy
-
-Within a major ResearchPlot release:
-
-- serialized enum meanings and required fields remain stable;
-- new rule IDs may be added as venue evidence evolves;
-- text phrasing, ordering of unrelated checks, and suggestions may improve;
-- any added, removed, or renamed document field requires a schema-version change;
-- a backwards-incompatible representation waits for a new ResearchPlot major release.
-
-Profile schema version, report schema version, manifest schema version, package version,
-and profile revision are separate. Consumers should not substitute one for another.
-
-## Validate hashes
-
-The standard library is enough to verify one artifact:
+## Self-contained HTML
 
 ```python
-from hashlib import sha256
-from pathlib import Path
-
-path = Path("submission/figure1.pdf")
-actual = sha256(path.read_bytes()).hexdigest()
-assert actual == manifest_hash
+rp.write_html_report(report, "build/researchplot.html")
 ```
 
-Read the hash from the parsed manifest rather than copying it into source code in a
-real project.
+HTML includes embedded JSON but no external scripts, stylesheets, fonts, or images. It
+is suitable for an offline review artifact. Treat the embedded JSON as the same report
+payload, not as a separately versioned contract.
+
+## JATS and RO-Crate
+
+```python
+jats = rp.submission_manifest_to_jats("dist/submission/researchplot-manifest.json")
+crate = rp.submission_manifest_to_ro_crate("dist/submission/researchplot-manifest.json")
+```
+
+These are deterministic projections of manifest data. They never infer missing prose
+or inspect the scientific content of referenced files.
+
+## Versioning policy
+
+Package version, project schema, profile schema, profile revision, report schema,
+manifest schema, lock schema, JATS version, and RO-Crate version are independent.
+Consumers must inspect the relevant field rather than infer one from another.
+
+Within a published schema version, enum meanings and required fields are stable. New
+profile rules can appear in a new immutable profile revision without changing the
+serialization schema.

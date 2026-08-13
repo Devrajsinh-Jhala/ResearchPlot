@@ -15,6 +15,7 @@ from .registry import resolve_profile
 from .style import StyleContext
 
 if TYPE_CHECKING:
+    from .planning import ExportPlan
     from .transactional_export import ExportResult
 
 
@@ -134,6 +135,23 @@ class Target:
         from .artifact_checks import audit_target
 
         return audit_target(path, target=self, attestations=attestations)
+
+    def plan_export(
+        self,
+        *,
+        formats: tuple[OutputFormat | str, ...] | list[OutputFormat | str] | None = None,
+        preferred: OutputFormat | str | None = None,
+    ) -> ExportPlan:
+        """Return a no-write ResearchPlot 2 export plan.
+
+        Planning selects a single deterministic preferred representation when formats
+        are omitted. The legacy :meth:`export` method intentionally retains its 1.x
+        implicit multi-format behavior until the next major API boundary.
+        """
+
+        from .planning import plan_export
+
+        return plan_export(self, formats=formats, preferred=preferred)
 
     def export(
         self,

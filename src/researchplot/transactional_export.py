@@ -316,12 +316,21 @@ def export_target(
         staged_paths = tuple(staging / path.name for path in outputs)
         options_base = dict(savefig_kwargs or {})
         options_base.setdefault("bbox_inches", None)
-        export_rc = target.style().rc if target.width is not None else {}
+        export_rc = dict(target.style().rc) if target.width is not None else {}
+        if any(coerce_format(path.suffix) is OutputFormat.SVG for path in outputs):
+            export_rc.setdefault("svg.hashsalt", profile_digest(target.profile))
         with mpl.rc_context(rc=export_rc):
             for staged, final in zip(staged_paths, outputs, strict=True):
                 output_format = coerce_format(final.suffix)
                 options = dict(options_base)
                 options["format"] = output_format.value
+                if output_format is OutputFormat.PDF:
+                    options.setdefault(
+                        "metadata",
+                        {"Creator": "ResearchPlot", "CreationDate": None, "ModDate": None},
+                    )
+                elif output_format is OutputFormat.SVG:
+                    options.setdefault("metadata", {"Creator": "ResearchPlot", "Date": None})
                 if output_format in {OutputFormat.PNG, OutputFormat.JPEG, OutputFormat.TIFF}:
                     required_dpi = _minimum_dpi(target, output_format)
                     options.setdefault(

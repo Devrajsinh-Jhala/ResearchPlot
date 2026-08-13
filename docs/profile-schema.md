@@ -1,185 +1,181 @@
-# Profile schema
+# Profile schema v3
 
-Profile JSON is validated against the JSON Schema 2020-12 document bundled as
-`researchplot/profile.schema.json`. The installed schema—not a copied example in these
-docs—is authoritative for field names and constraints.
-
-## Validate a file
+Venue profiles are declarative JSON validated against the bundled JSON Schema 2020-12
+contract. They contain evidence and rules, never Python or templates.
 
 ```bash
 researchplot profile validate path/to/profile.json
 ```
 
-The validator rejects unknown schema versions, malformed coordinates, incompatible
-operator/value/unit combinations, missing sources, references to unknown source IDs,
-invalid applicability values, and other structural errors.
-
-Python callers can load a local file or validate in-memory data without changing the
-built-in registry:
+In Python:
 
 ```python
-import researchplot as rp
-
-profile = rp.load_profile("path/to/profile.json")
-profile = rp.validate_profile_data(payload, filename="candidate.json")
-schema = rp.profile_schema()  # defensive copy of the bundled schema
+schema = rp.profile_schema()
+profile = rp.load_profile("profiles/example.json")
 ```
 
-## Conceptual structure
+`profile_schema()` returns an independent copy so callers cannot mutate the installed
+contract.
+
+## Identity and governance
+
+A schema-v3 profile can define:
+
+| Field | Purpose |
+| --- | --- |
+| `id`, `namespace`, `revision` | Immutable coordinate. Revision uses `YYYY.MM.PATCH`. |
+| `name`, `aliases`, `kind`, `year`, `scope` | Human resolution and applicability context. |
+| `status` | `draft`, `verified`, `deprecated`, or `withdrawn`. |
+| `maintainers`, `license`, `governance` | Ownership and review metadata. |
+| `extends` | Optional base profile composition. |
+| `effective_date`, `verified_on` | Evidence timing. |
+| `default_width` | Named default when a venue defines physical widths. |
+| `caveats` | Limits that must travel with reports. |
+| `sources`, `rules` | Official evidence and declarative assertions. |
+
+Some migrated profiles legitimately omit optional governance fields. Status and review
+metadata describe the encoded document, not a guarantee that every venue requirement
+has been discovered.
+
+## Sources
+
+A source record includes a stable ID, title, official URL, locator, retrieval and
+verification dates, source kind/publisher, and optional archive URL or SHA-256 content
+fingerprint.
+
+Use the narrowest official page or template section that supports a rule. Do not cite a
+generic publisher page as evidence for a journal-specific claim. Leave an optional
+fingerprint `null` when it was not captured; never invent one.
+
+## Rules
+
+A traditional one-probe rule contains:
 
 ```json
 {
-  "schema_version": 2,
-  "id": "example-journal",
-  "revision": "2026.08.0",
-  "effective_date": "2026-08-01",
-  "name": "Example Journal",
-  "kind": "journal",
-  "year": null,
-  "aliases": ["example"],
-  "scope": "Main-article figures for Example Journal.",
-  "default_width": "single",
-  "verified_on": "2026-08-01",
-  "caveats": ["Special collections may provide additional instructions."],
-  "sources": [
+  "id": "figure.width.single",
+  "level": "required",
+  "applies_to": {"widths": ["single"]},
+  "probe": "artifact.width_mm",
+  "constraint": {
+    "operator": "approx",
+    "value": 89,
+    "unit": "mm",
+    "tolerance": 0.5
+  },
+  "verification": "automated",
+  "phases": ["live", "file"],
+  "source_ids": ["nature-panels"],
+  "description": "Nature single-column width."
+}
+```
+
+Rule level is `required`, `recommended`, or `inferred`. Verification mode is
+`automated`, `manual`, or `unsupported`. Phases are `live`, `file`, `bundle`, and
+`manuscript`.
+
+Applicability may constrain width, role, content, or output format. A rule that does not
+apply is not emitted as a failure.
+
+## Operators
+
+The closed operator set is:
+
+```text
+eq, ne, gt, gte, lt, lte,
+in, not_in, between, subset,
+contains, not_contains,
+approx, exists, pattern, required, prohibited
+```
+
+`approx` accepts a numeric tolerance. `pattern` performs a bounded full match (patterns
+are limited to 256 characters and input to 4,096 characters). Profile validation
+verifies value shape and unit dimension against the probe.
+
+## Composition
+
+Expression rules can compose typed comparisons with `all`, `any`, and `not`:
+
+```json
+{
+  "kind": "all",
+  "expressions": [
     {
-      "id": "artwork-guide",
-      "title": "Example Journal artwork guide",
-      "url": "https://example.org/artwork-guide",
-      "locator": "Figures > Size",
-      "retrieved_on": "2026-08-01",
-      "verified_on": "2026-08-01"
-    }
-  ],
-  "rules": [
-    {
-      "id": "figure.width.single",
-      "level": "required",
+      "kind": "comparison",
       "probe": "artifact.width_mm",
-      "constraint": {
-        "operator": "approx",
-        "value": 89,
-        "unit": "mm",
-        "tolerance": 0.5
-      },
-      "applies_to": {"widths": ["single"]},
-      "verification": "automated",
-      "phases": ["live", "file"],
-      "source_ids": ["artwork-guide"],
-      "description": "Single-column figures must be 89 mm wide."
+      "constraint": {"operator": "gte", "value": 80, "unit": "mm"}
+    },
+    {
+      "kind": "comparison",
+      "probe": "artifact.width_mm",
+      "constraint": {"operator": "lte", "value": 90, "unit": "mm"}
     }
   ]
 }
 ```
 
-A profile digest is calculated from canonical profile content. Authors do not choose a
-digest that disagrees with the content.
+Expressions cannot invoke arbitrary code. Every comparison still uses a known probe,
+compatible phase, closed operator, finite value, and compatible unit.
 
-## Rule anatomy
+Collection observations additionally support bounded quantifier and aggregate nodes:
 
-```json
-{
-  "id": "raster.minimum_resolution",
-  "level": "required",
-  "applies_to": {
-    "roles": ["main"],
-    "content_kinds": ["line_art"],
-    "output_formats": ["tiff"]
-  },
-  "probe": "artifact.dpi",
-  "constraint": {
-    "operator": "gte",
-    "value": 600,
-    "unit": "dpi",
-    "tolerance": null
-  },
-  "verification": "automated",
-  "phases": ["file"],
-  "source_ids": ["artwork-guide"],
-  "description": "Line art must be exported at 600 DPI or higher."
-}
+- `quantifier`: apply one constraint to `all` or `any` members;
+- `aggregate`: compare the `count`, `minimum`, or `maximum` of members.
+
+Empty quantifiers fail; empty minimum/maximum aggregates are unresolved. Minimum and
+maximum require numeric members. These operators are useful only with a registered
+collection-valued probe; profiles cannot create arbitrary observations.
+
+## Probe catalog
+
+```python
+for probe in rp.list_probes():
+    print(probe.id, probe.value_kind, probe.dimension, probe.phases)
 ```
 
-### Applicability
+The current catalog includes physical artifact dimensions, DPI/file size/page count,
+format, live titles/fonts/lines/markers/color signals, PDF font resources, raster
+mode/compression, and bundle caption/alt-text/source-data/filename metadata.
 
-Applicability selects rules by figure role, content kind, and output format. An omitted
-dimension means that the rule is not narrowed by that dimension; it does not mean an
-arbitrary default should be invented.
+Deep inspectors collect additional passive facts—for example PDF active content and
+raster frame count—but those facts are not automatically available to a profile rule
+until a compatible public probe is registered. This prevents an inspector field from
+silently becoming required compliance evidence.
 
-Public enum vocabularies include `FigureRole`, `ContentKind`, and `OutputFormat`.
-Profile validation fails on unsupported values.
+## Unit catalog
 
-### Probe and constraint
-
-The probe names a typed observation produced by an inspector. The constraint declares
-an operator, expected value, and optional unit. `ConstraintOperator` supports only
-combinations meaningful for that observation type; for example, a numeric `gte`
-constraint cannot compare a list of file formats.
-
-Rules should express venue evidence, not contain executable code.
-
-### Rule level
-
-- `required` comes from explicit official requirements;
-- `recommended` comes from explicit preferences or recommendations;
-- `inferred` is maintainer-derived and must be labeled as such.
-
-Do not convert absent guidance into a required or recommended rule.
-
-### Verification mode
-
-- `automated`: an available inspector can establish the probe;
-- `manual`: human evidence or an attestation is required;
-- `unsupported`: the rule is recorded but no reliable check exists.
-
-The mode controls reporting honesty. It is not a promise that every artifact format
-exposes the same observation.
-
-## Sources
-
-A source record should identify:
-
-- a stable source ID used by rules;
-- the official title and canonical URL;
-- the relevant section heading, page, anchor, or template file;
-- the date maintainers verified it;
-- optional notes needed to interpret scope.
-
-Keep quoted publisher text short. Rules should encode a precise constraint and use the
-locator to make the interpretation reviewable.
-
-## Revisions and immutability
-
-Use a new revision whenever a released rule, source interpretation, or behaviorally
-meaningful caveat changes. Never replace a published coordinate in place. Typographical
-documentation changes that do not affect packaged profile evidence can ship with the
-next package release without creating a false venue revision.
-
-Before proposing a new revision:
-
-```bash
-researchplot profile validate profile.json
-researchplot profile diff current.json profile.json
+```python
+rp.convert_value(3.5, "in", "mm")
 ```
 
-Tests must include resolution, coordinate/digest stability, applicability, passing and
-failing examples, unsupported observations, source references, and package inclusion.
+Supported units include `mm`, `cm`, `in`, `pt`, `px`, `dpi`, byte-size units, ratio,
+percent, count, degrees, and bit depth. Conversion is allowed only within the same unit
+dimension and rejects non-finite numbers.
 
-## External profile packs
+## Composition and conflict handling
 
-ResearchPlot discovers installed packs from the `researchplot.profiles` entry-point
-group without network access. A pack can expose one profile mapping, a validated
-`VenueProfile`, a JSON file or directory path, an iterable of those values, or a
-zero-argument callable returning one of them:
+Profile composition resolves an optional base and overlay deterministically. An overlay
+must explicitly supersede a conflicting base rule; accidental duplicate rule IDs or
+incompatible identity cause validation failure. Profiles are content-digested after
+normalization.
 
-```toml
-[project.entry-points."researchplot.profiles"]
-my_lab = "my_researchplot_profiles:profiles"
+## Migration from schema v2
+
+```python
+translated = rp.translate_v2_profile(v2_payload)
 ```
 
-Coordinates must be unique, and normalized IDs, names, and aliases cannot collide with
-another installed or bundled profile. A broken or conflicting installed pack is skipped
-with a runtime warning so bundled profiles remain available. Profile-pack entry points
-execute trusted local Python code; install only packs you trust. Run `researchplot
-profile validate` on every JSON profile and see [CONTRIBUTING](contributing.md) before
-proposing a built-in profile.
+The translator exists throughout 2.x so immutable v2 evidence remains readable. New
+profile contributions should author v3 directly and include conformance fixtures for
+every automated rule.
+
+## Review checklist
+
+- Cite only official, directly supporting sources.
+- Use a precise section, page, or heading locator.
+- Classify required versus recommended language conservatively.
+- Leave missing guidance unspecified.
+- Confirm every probe/operator/unit/phase combination validates.
+- Add passing and failing conformance artifacts for automated rules.
+- Record caveats and generic-publisher scope prominently.
+- Obtain the repository's required profile review before marking `verified`.

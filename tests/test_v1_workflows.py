@@ -385,7 +385,7 @@ def test_cli_profile_check_json_sarif_and_exit_codes(
 
     assert main(["profile", "list", "--json"]) == 0
     catalog = json.loads(capsys.readouterr().out)
-    assert len(catalog) == 9
+    assert len(catalog) == 22
 
     assert (
         main(
@@ -515,3 +515,13 @@ def test_profile_lock_is_deterministic(tmp_path: Path) -> None:
     payload = json.loads(first)
     assert payload["profile"] == profile.coordinate
     assert payload["digest"] == profile.digest
+
+
+@pytest.mark.parametrize("suffix", [".pdf", ".svg"])
+def test_vector_exports_have_stable_metadata(tmp_path: Path, suffix: str) -> None:
+    selected, fig = _nature_figure()
+
+    first = selected.export(fig, tmp_path / f"first{suffix}", policy="violations").paths[0]
+    second = selected.export(fig, tmp_path / f"second{suffix}", policy="violations").paths[0]
+
+    assert first.read_bytes() == second.read_bytes()

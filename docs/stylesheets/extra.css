@@ -35,3 +35,55 @@
     animation: none;
   }
 }
+
+.rp-pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 1.8rem 0;
+  padding: 1.25rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 28%, transparent);
+  border-radius: 0.8rem;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--md-primary-fg-color) 8%, transparent), transparent);
+}
+
+.rp-pipeline span {
+  position: relative;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 45%, transparent);
+  border-radius: 999px;
+  background: var(--md-default-bg-color);
+  font-weight: 650;
+  animation: rp-pipeline-pulse 6s ease-in-out infinite;
+}
+
+.rp-pipeline span:nth-of-type(2) { animation-delay: 0.7s; }
+.rp-pipeline span:nth-of-type(3) { animation-delay: 1.4s; }
+.rp-pipeline span:nth-of-type(4) { animation-delay: 2.1s; }
+.rp-pipeline span:nth-of-type(5) { animation-delay: 2.8s; }
+.rp-pipeline span:nth-of-type(6) { animation-delay: 3.5s; }
+
+.rp-pipeline b {
+  color: var(--md-primary-fg-color);
+  animation: rp-arrow 1.8s ease-in-out infinite;
+}
+
+.rp-pipeline i { color: var(--md-default-fg-color--light); font-style: normal; }
+
+@keyframes rp-pipeline-pulse {
+  0%, 18%, 100% { box-shadow: 0 0 0 0 transparent; transform: translateY(0); }
+  8% { box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--md-accent-fg-color) 17%, transparent); transform: translateY(-0.15rem); }
+}
+
+@keyframes rp-arrow {
+  0%, 100% { opacity: 0.35; transform: translateX(-0.1rem); }
+  50% { opacity: 1; transform: translateX(0.1rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp-pipeline span,
+  .rp-pipeline b { animation: none; }
+}

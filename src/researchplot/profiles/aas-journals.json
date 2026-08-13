@@ -1,0 +1,296 @@
+{
+  "schema_version": 3,
+  "id": "aas-journals",
+  "revision": "2026.08.0",
+  "effective_date": "2026-08-03",
+  "name": "American Astronomical Society journals",
+  "kind": "publisher",
+  "year": null,
+  "aliases": [
+    "aas",
+    "aas journals",
+    "astrophysical journal"
+  ],
+  "scope": "Static graphics submitted to AAS journals.",
+  "default_width": null,
+  "verified_on": "2026-08-03",
+  "caveats": [
+    "Interactive figures and data-behind-the-figure deliverables have additional requirements not automated by this profile."
+  ],
+  "sources": [
+    {
+      "id": "aas-graphics",
+      "title": "AAS Graphics Guide",
+      "url": "https://journals.aas.org/graphics-guide/",
+      "locator": "File formats, resolution, fonts, lines, and accessibility",
+      "retrieved_on": "2026-08-03",
+      "verified_on": "2026-08-03",
+      "kind": "official_guideline",
+      "publisher": "AAS Graphics Guide",
+      "archive_url": null,
+      "content_sha256": null
+    }
+  ],
+  "rules": [
+    {
+      "id": "export.formats.allowed",
+      "level": "required",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "pdf",
+          "eps",
+          "png",
+          "jpeg",
+          "tiff"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "AAS accepts PDF, EPS, PNG, JPEG, and TIFF static graphics.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.formats.vector",
+      "level": "recommended",
+      "probe": "artifact.format",
+      "constraint": {
+        "operator": "in",
+        "value": [
+          "pdf",
+          "eps"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [
+          "data_visualization",
+          "line_art"
+        ],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "PDF or EPS is preferred for vector graphics.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "export.min_dpi.raster",
+      "level": "required",
+      "probe": "artifact.dpi",
+      "constraint": {
+        "operator": "gte",
+        "value": 300,
+        "unit": "dpi",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [
+          "png",
+          "jpeg",
+          "tiff"
+        ],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "Raster graphics require at least 300 DPI.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.size.minimum",
+      "level": "required",
+      "probe": "font.size.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 6,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "Text must be at least 6 point at publication size.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "font.family.allowed",
+      "level": "recommended",
+      "probe": "font.families.effective",
+      "constraint": {
+        "operator": "subset",
+        "value": [
+          "Times",
+          "Times New Roman",
+          "Helvetica",
+          "Symbol"
+        ],
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "Use common Times, Helvetica, or Symbol fonts.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "line.width.minimum",
+      "level": "required",
+      "probe": "line.width.min_pt",
+      "constraint": {
+        "operator": "gte",
+        "value": 0.5,
+        "unit": "pt",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "Lines must be at least 0.5 point.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "artifact.page_count.single",
+      "level": "required",
+      "probe": "artifact.page_count",
+      "constraint": {
+        "operator": "eq",
+        "value": 1,
+        "unit": "page",
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "file"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "Each graphics file must contain one page.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    },
+    {
+      "id": "accessibility.non_color_distinctions",
+      "level": "recommended",
+      "probe": "color.non_color_distinctions",
+      "constraint": {
+        "operator": "eq",
+        "value": true,
+        "unit": null,
+        "tolerance": null
+      },
+      "applies_to": {
+        "roles": [],
+        "content_kinds": [],
+        "output_formats": [],
+        "widths": []
+      },
+      "verification": "automated",
+      "phases": [
+        "live"
+      ],
+      "source_ids": [
+        "aas-graphics"
+      ],
+      "description": "Do not use color as the only visual delimiter.",
+      "expression": null,
+      "supersedes": [],
+      "rationale": null
+    }
+  ],
+  "namespace": "researchplot",
+  "status": "verified",
+  "license": "MIT",
+  "maintainers": [
+    "Devrajsinh Jhala"
+  ],
+  "extends": [],
+  "governance": {
+    "policy": "researchplot-governance-v1",
+    "reviewers": [
+      "Devrajsinh Jhala"
+    ],
+    "reviewed_on": "2026-08-03",
+    "change_note": "Initial source-backed schema-v3 profile."
+  }
+}

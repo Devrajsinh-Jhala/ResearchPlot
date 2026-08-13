@@ -6,7 +6,12 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator, ValidationError
 
-from researchplot import export_manifest_schema, report_schema, submission_manifest_schema
+from researchplot import (
+    export_manifest_schema,
+    report_schema,
+    submission_manifest_schema,
+    validation_report_schema,
+)
 from researchplot.compliance import Finding, Outcome, Report, TargetContext
 from researchplot.models import RuleLevel
 
@@ -62,13 +67,16 @@ def test_contract_schemas_are_valid_draft_2020_12() -> None:
     report_schema = _load_schema("report.schema.json")
     export_schema = _load_schema("export-manifest.schema.json")
     manifest_schema = _load_schema("submission-manifest.schema.json")
+    validation_schema = _load_schema("validation-report.schema.json")
 
     Draft202012Validator.check_schema(report_schema)
     Draft202012Validator.check_schema(export_schema)
     Draft202012Validator.check_schema(manifest_schema)
+    Draft202012Validator.check_schema(validation_schema)
     assert report_schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert export_schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert manifest_schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
+    assert validation_schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
 
     def references(value: object) -> list[str]:
         if isinstance(value, dict):
@@ -88,9 +96,11 @@ def test_contract_schemas_are_bundled_and_return_independent_copies() -> None:
     report = report_schema()
     export = export_manifest_schema()
     manifest = submission_manifest_schema()
+    validation = validation_report_schema()
     assert report["$id"] == _load_schema("report.schema.json")["$id"]
     assert export["$id"] == _load_schema("export-manifest.schema.json")["$id"]
     assert manifest["$id"] == _load_schema("submission-manifest.schema.json")["$id"]
+    assert validation["$id"] == _load_schema("validation-report.schema.json")["$id"]
     report["title"] = "changed"
     assert report_schema()["title"] == "ResearchPlot compliance report"
 

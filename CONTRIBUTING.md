@@ -5,7 +5,7 @@ before a new profile, schema change, public API change, or large inspector.
 
 ## Development setup
 
-ResearchPlot 1.x requires Python 3.11 or newer.
+ResearchPlot 2.x requires Python 3.11 or newer.
 
 ```bash
 git clone https://github.com/Devrajsinh-Jhala/ResearchPlot.git
@@ -65,7 +65,8 @@ Coverage is a signal, not a substitute for assertions about compliance semantics
 
 Profiles must use official, traceable sources. A proposal must include:
 
-- an immutable `<profile-id>@<revision>` and valid schema-v2 JSON;
+- an immutable `<profile-id>@<revision>` and valid schema-v3 JSON;
+- governance/status metadata and the required independent profile review;
 - scope, effective date where known, verification date, and caveats;
 - a section, page, anchor, or template-file locator for every source;
 - applicability, level, probe, constraint, verification mode, and source IDs for each
@@ -86,16 +87,17 @@ A released profile coordinate is immutable. A correction creates a new revision 
 records why the evidence changed. A generic publisher profile must state that an
 individual journal can override it.
 
-Third-party profile packs use the `researchplot.profiles` entry-point group. Installed
-packs execute as trusted Python code; local candidate JSON should still be checked with
-`profile validate` before it is packaged or proposed as built-in evidence.
+Profiles are data-only JSON. Legacy executable `researchplot.profiles` entry points are
+disabled by default because importing them crosses a trusted-code boundary and can
+shadow installed evidence. Validate local candidate JSON before proposing it as
+built-in evidence.
 
 ## Reports and file formats
 
-Changes to `Report.to_dict()`, the manifest, or SARIF output require contract
-tests and schema-version review. Do not infer the overall verdict from display text or
-SARIF severity. Preserve the distinction between rule level, check outcome, and report
-verdict.
+Changes to `Report.to_dict()`, `PlanAssessment.to_dict()`, a manifest, or SARIF output
+require contract tests and schema-version review. Do not infer the overall verdict from
+display text or SARIF severity. Preserve the distinction between rule level, check
+outcome, phase coverage, and report verdict.
 
 Parsers must not execute embedded content or fetch external resources. Report
 unavailable evidence as skipped and malformed input as an intentional error.

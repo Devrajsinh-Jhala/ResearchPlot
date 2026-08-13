@@ -1,5 +1,5 @@
-name: ResearchPlot compliance check
-description: Audit research figures against a source-backed ResearchPlot venue profile.
+name: ResearchPlot 2.0 compliance preflight
+description: Run a coverage-aware project check or saved-artifact audit with source-backed venue evidence.
 author: Devrajsinh Jhala
 
 branding:
@@ -10,13 +10,13 @@ inputs:
   version:
     description: Exact researchplot-venues release to install from PyPI.
     required: false
-    default: "1.0.0"
+    default: "2.0.0"
   python-version:
     description: Python version used to run ResearchPlot.
     required: false
     default: "3.12"
   config:
-    description: Project configuration path. It takes precedence when the file exists.
+    description: Schema-v3 project configuration path. It is used only when the file exists.
     required: false
     default: researchplot.toml
   paths:
@@ -36,9 +36,17 @@ inputs:
     required: false
     default: main
   content:
-    description: Content kind used for direct checks.
+    description: Content/artwork kind used for direct saved-artifact audits.
     required: false
     default: data-visualization
+  frozen:
+    description: Verify the exact profile lock before inspecting artifacts.
+    required: false
+    default: "true"
+  lock:
+    description: Profile lock path used by a direct frozen artifact audit.
+    required: false
+    default: researchplot.lock.json
   sarif-file:
     description: Path where the SARIF 2.1.0 report is written.
     required: false
@@ -64,7 +72,7 @@ runs:
   using: composite
   steps:
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
       with:
         python-version: ${{ inputs.python-version }}
         cache: pip
@@ -88,6 +96,8 @@ runs:
         INPUT_WIDTH: ${{ inputs.width }}
         INPUT_ROLE: ${{ inputs.role }}
         INPUT_CONTENT: ${{ inputs.content }}
+        INPUT_FROZEN: ${{ inputs.frozen }}
+        INPUT_LOCK: ${{ inputs.lock }}
         INPUT_SARIF: ${{ inputs.sarif-file }}
       run: |
         set -uo pipefail
@@ -98,10 +108,14 @@ runs:
 
         status=0
         if [[ -n "$INPUT_CONFIG" && -f "$INPUT_CONFIG" ]]; then
-          researchplot check \
+          command=(researchplot check \
             --config "$INPUT_CONFIG" \
             --format sarif \
-            --output "$SARIF_PATH" || status=$?
+            --output "$SARIF_PATH")
+          if [[ "$INPUT_FROZEN" == "true" ]]; then
+            command+=(--frozen)
+          fi
+          "${command[@]}" || status=$?
         elif [[ -n "$INPUT_PROFILE" ]]; then
           target_paths=()
           while IFS= read -r target_path; do
@@ -112,7 +126,7 @@ runs:
           if [[ ${#target_paths[@]} -eq 0 ]]; then
             target_paths=(.)
           fi
-          command=(researchplot check "${target_paths[@]}"
+          command=(researchplot audit "${target_paths[@]}"
             --profile "$INPUT_PROFILE"
             --role "$INPUT_ROLE"
             --content "$INPUT_CONTENT"
@@ -120,6 +134,9 @@ runs:
             --output "$SARIF_PATH")
           if [[ -n "$INPUT_WIDTH" ]]; then
             command+=(--width "$INPUT_WIDTH")
+          fi
+          if [[ "$INPUT_FROZEN" == "true" ]]; then
+            command+=(--frozen --lock "$INPUT_LOCK")
           fi
           "${command[@]}" || status=$?
         else
@@ -140,7 +157,7 @@ runs:
 
     - name: Upload SARIF to GitHub code scanning
       if: ${{ inputs.upload-sarif == 'true' && steps.check.outputs.sarif-created == 'true' }}
-      uses: github/codeql-action/upload-sarif@v4
+      uses: github/codeql-action/upload-sarif@d1ba80a13dd99fba24a470575428917156a28b43 # v4
       with:
         sarif_file: ${{ steps.check.outputs.sarif-file }}
         category: ${{ inputs.sarif-category }}
