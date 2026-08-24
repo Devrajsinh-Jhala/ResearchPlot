@@ -52,7 +52,7 @@ plots = [
 ]
 dev = [
   "build>=1.2",
-  "jsonschema>=4.23",
+  "jsonschema>=4.26.0",
   "mypy>=1.11",
   "pre-commit>=4",
   "pytest>=8",
