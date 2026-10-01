@@ -90,8 +90,9 @@ not scientific validity or provenance of authorship.
 
 The current bridge is manifest schema v1 and cannot represent every schema-v3 project
 field. In particular, multiple source-data files, generic attachments, typed
-attestation/waiver metadata, and full panel/long-description structures need the future v2
-bundle contract. The bridge rejects some unrepresentable projects rather than writing
+attestation/waiver metadata, and full panel/long-description structures are not fully
+represented by the final release's bundle contract. The bridge rejects some
+unrepresentable projects rather than writing
 misleading metadata.
 
 ## Manifest and archive verification

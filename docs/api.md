@@ -1,6 +1,6 @@
 # Python API
 
-The 2.0 API is project-oriented. The v1 `Target` API remains supported throughout 2.x
+The 2.0 API is project-oriented. The v1 `Target` API remains available in the final 2.0.1 release
 for phase-local checks and migration.
 
 ## Primary project workflow
@@ -207,7 +207,7 @@ figures are supplied.
       members_order: source
       show_root_heading: false
 
-Placement matching is conservative; a complete placement set is not yet integrated
+Placement matching is conservative; a complete placement set is not integrated
 with venue-specific manuscript rules in `CompliancePlan`.
 
 ## Allowlisted external inspectors

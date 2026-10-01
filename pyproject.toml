@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "researchplot-venues"
-version = "2.0.0"
+version = "2.0.1"
 description = "Coverage-aware, source-backed preflight for research figures and submissions."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,7 +23,7 @@ keywords = [
   "visualization",
 ]
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
+  "Development Status :: 7 - Inactive",
   "Framework :: Matplotlib",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
@@ -104,6 +104,7 @@ include = [
   "/CONTRIBUTING.md",
   "/docs",
   "/LICENSE",
+  "/MAINTENANCE.md",
   "/mkdocs.yml",
   "/README.md",
   "/SECURITY.md",

@@ -10,7 +10,7 @@ inputs:
   version:
     description: Exact researchplot-venues release to install from PyPI.
     required: false
-    default: "2.0.0"
+    default: "2.0.1"
   python-version:
     description: Python version used to run ResearchPlot.
     required: false

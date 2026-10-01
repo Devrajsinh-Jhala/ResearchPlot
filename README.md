@@ -1,5 +1,11 @@
 # ResearchPlot 2.0
 
+> **Maintenance ended on 2026-10-01.** Version **2.0.1** is the final release.
+> No further feature, venue-profile, dependency, or security updates are planned.
+> The package and source remain available under MIT; forks are welcome.
+> Review the [maintenance and handoff guide](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/MAINTENANCE.md)
+> and current official venue instructions before using historical profiles.
+
 **A local, source-backed preflight workspace for research figures.**
 
 [![PyPI](https://img.shields.io/pypi/v/researchplot-venues.svg?cacheSeconds=300)](https://pypi.org/project/researchplot-venues/)
@@ -44,20 +50,22 @@ ResearchPlot 2.0 requires Python 3.11 or newer. The distribution is named
 `researchplot-venues`; the import package and command are both `researchplot`.
 
 ```bash
-python -m pip install researchplot-venues
+python -m pip install researchplot-venues==2.0.1
 researchplot --version
 ```
 
 Optional capabilities are installed only when needed:
 
 ```bash
-python -m pip install "researchplot-venues[web]"       # local browser workspace
-python -m pip install "researchplot-venues[registry]"  # signed profile sync
-python -m pip install "researchplot-venues[plots]"     # deprecated plotting helpers
+python -m pip install "researchplot-venues[web]==2.0.1"       # local browser workspace
+python -m pip install "researchplot-venues[registry]==2.0.1"  # signed profile sync
+python -m pip install "researchplot-venues[plots]==2.0.1"     # deprecated plotting helpers
 ```
 
 The base package works offline and requires neither LaTeX nor downloaded fonts.
 Checking, exporting, bundling, and the browser workspace do not contact the network.
+Pinning the package does not pin its dependencies. See the maintenance guide for
+capturing a tested environment and an offline wheelhouse.
 
 ## Audit an existing figure first
 
@@ -146,6 +154,9 @@ if report.verdict is rp.Verdict.COMPLIANT:
 deterministic ZIP from that directory with `create_deterministic_archive()` after its
 manifest verifies. JATS and RO-Crate metadata converters are available for the emitted
 submission manifest; they do not invent missing captions or descriptions.
+With the `complete` project policy, version 2.0.1 checks aggregate project coverage
+against the staged outputs before committing the submission directory: required
+failures or missing required evidence block the bundle.
 
 ## Make a Matplotlib figure at the venue width
 
@@ -237,11 +248,15 @@ sources establish.
 Signed registry updates are opt-in. Only an explicit profile-sync operation may use
 the network; normal resolution consults installed data and project locks prevent silent
 updates or rollback. Registry clients require an explicitly configured trusted root.
+The bundled catalog is a historical snapshot. Bare conference aliases continue to
+resolve to the installed 2026 profiles; they do not resolve a future conference year.
+Publisher freshness warnings do not establish that old guidance remains valid, and
+year-pinned profiles remain immutable. No maintained public registry is promised.
 
 ## Local browser workspace
 
 ```bash
-python -m pip install "researchplot-venues[web]"
+python -m pip install "researchplot-venues[web]==2.0.1"
 researchplot serve
 ```
 
@@ -259,7 +274,8 @@ Install `[plots]` only while migrating; new work should compose figures with nat
 Matplotlib. Run `researchplot migrate` to translate a v1 configuration into a separate
 schema-v3 file and review every untranslatable field before adoption.
 
-No compatibility surface is scheduled for removal before 3.0.
+The compatibility bridge is retained in the final release. No further release or
+compatibility removal is planned.
 
 ## Documentation
 
@@ -269,9 +285,10 @@ No compatibility surface is scheduled for removal before 3.0.
 - [Configuration](https://devrajsinh-jhala.github.io/ResearchPlot/configuration/)
 - [Artifact and bundle formats](https://devrajsinh-jhala.github.io/ResearchPlot/formats/)
 - [Security and limitations](https://devrajsinh-jhala.github.io/ResearchPlot/limitations/)
+- [Final release and maintenance status](https://devrajsinh-jhala.github.io/ResearchPlot/maintenance/)
 - [Python API](https://devrajsinh-jhala.github.io/ResearchPlot/api/)
 
 ResearchPlot is MIT licensed. See [CONTRIBUTING.md](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/CONTRIBUTING.md)
-before proposing a profile or behavior change, report vulnerabilities through
+for developing a fork, review the unsupported-release policy in
 [SECURITY.md](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/SECURITY.md), and
 cite the project using [CITATION.cff](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/CITATION.cff).

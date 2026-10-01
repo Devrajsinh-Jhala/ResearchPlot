@@ -1,7 +1,14 @@
-# Contributing
+# Developing a fork
 
-Thank you for improving ResearchPlot. Small fixes are welcome directly; open an issue
-before a new profile, schema change, public API change, or large inspector.
+ResearchPlot maintenance ended on **2026-10-01**, with **2.0.1** as the final release.
+Upstream feature, profile, dependency, and security maintenance has ended; issues and
+pull requests may not receive a response. The MIT-licensed source remains available
+for independently maintained forks. See
+[MAINTENANCE.md](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/MAINTENANCE.md).
+
+The instructions below preserve the project's development and evidence contracts for
+fork authors. Establish your own support policy, security process, release identity,
+and review practices before publishing a maintained derivative.
 
 ## Development setup
 
@@ -10,6 +17,7 @@ ResearchPlot 2.x requires Python 3.11 or newer.
 ```bash
 git clone https://github.com/Devrajsinh-Jhala/ResearchPlot.git
 cd ResearchPlot
+git checkout v2.0.1
 python -m venv .venv
 ```
 
@@ -17,15 +25,18 @@ Activate the environment, then install all development groups:
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev,docs]"
+python -m pip install -e ".[dev,docs,plots,registry]"
 ```
 
 Run the same checks used for a release:
 
 ```bash
 python -m ruff check .
+python -m ruff format --check .
 python -m mypy src
 python -m pytest
+python scripts/generate_contract_schemas.py --check
+python scripts/generate_profile_docs.py --check
 python -m mkdocs build --strict
 python -m build
 python -m twine check dist/*
@@ -89,8 +100,8 @@ individual journal can override it.
 
 Profiles are data-only JSON. Legacy executable `researchplot.profiles` entry points are
 disabled by default because importing them crosses a trusted-code boundary and can
-shadow installed evidence. Validate local candidate JSON before proposing it as
-built-in evidence.
+shadow installed evidence. Validate local candidate JSON before including it as
+built-in evidence in a maintained fork.
 
 ## Reports and file formats
 
@@ -106,7 +117,7 @@ unavailable evidence as skipped and malformed input as an intentional error.
 
 Examples must be executable against the documented public API and use exact profile
 coordinates where reproducibility matters. Mermaid diagrams are supported through
-MkDocs Material. Build documentation strictly before opening a pull request:
+MkDocs Material. Build documentation strictly before publishing a change in your fork:
 
 ```bash
 python -m mkdocs build --strict
@@ -114,17 +125,23 @@ python -m mkdocs build --strict
 
 Avoid promising acceptance or stating that metadata proves an unobservable property.
 
-## Pull requests
+## Changes in your fork
 
 Keep changes focused, update tests and changelog, and describe the official evidence or
 behavioral contract affected. Do not commit build output, virtual environments, notebook
 outputs, or generated submission artifacts.
 
+Do not rely on upstream review or merge activity. Give corrected profiles a new
+immutable revision rather than editing a released coordinate. Retain attribution and
+the MIT license, and identify which changes and profiles your fork maintains.
+
 ## Releases
 
-Maintainers build and test sdist and wheel in clean environments. Production publishing
-runs only from a signed version tag through the protected `pypi` GitHub environment and
-PyPI Trusted Publishing. Never upload a locally built artifact to production PyPI.
+Build and test sdist and wheel in clean environments. The upstream final release uses
+a signed version tag, the protected `pypi` GitHub environment, and PyPI Trusted
+Publishing. A fork must configure its own project name, publishing identities, signing
+keys, protected environments, and hosting settings. Do not reuse upstream credentials
+or assume that its Trusted Publisher configuration applies to a fork.
 
 Release gates include lint, typing, branch coverage, strict docs, schema validation,
 artifact fixtures, wheel/sdist installation without network or LaTeX, and a clean CLI

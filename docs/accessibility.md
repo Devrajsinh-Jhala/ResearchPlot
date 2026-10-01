@@ -112,4 +112,4 @@ required. Generic accessibility advice never masquerades as publisher policy.
 
 JATS export includes available captions and alt text from the current submission
 manifest. The richer project model preserves long descriptions and panel metadata, but
-the v1 bundle-manifest bridge cannot yet serialize every field into JATS.
+the final release's v1 bundle-manifest bridge cannot serialize every field into JATS.

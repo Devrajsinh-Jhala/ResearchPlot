@@ -3,7 +3,7 @@ site_description: Local, source-backed venue compliance and artifact preflight f
 site_url: https://devrajsinh-jhala.github.io/ResearchPlot/
 repo_url: https://github.com/Devrajsinh-Jhala/ResearchPlot
 repo_name: Devrajsinh-Jhala/ResearchPlot
-edit_uri: edit/main/docs/
+edit_uri: ""
 
 theme:
   name: material
@@ -38,6 +38,7 @@ extra_css:
 
 nav:
   - Home: index.md
+  - Final release and maintenance: maintenance.md
   - ResearchPlot 2.0: v2.md
   - ResearchPlot 1.x compatibility: v1.md
   - Getting started: getting-started.md

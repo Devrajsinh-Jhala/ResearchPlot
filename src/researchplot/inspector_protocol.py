@@ -618,6 +618,30 @@ def _sanitized_environment() -> dict[str, str]:
 def _terminate_process(process: subprocess.Popen[bytes]) -> None:
     if process.poll() is not None:
         return
+    if os.name == "nt":
+        # A Windows virtual-environment python.exe may itself be a launcher.
+        # Terminating only that process leaves its interpreter (and inherited
+        # request/output handles) alive, masking timeout errors during cleanup.
+        # Use the system utility directly, never a shell or a PATH lookup.
+        system_root = Path(os.environ.get("SYSTEMROOT", r"C:\Windows"))
+        taskkill = system_root / "System32" / "taskkill.exe"
+        try:
+            subprocess.run(
+                (str(taskkill), "/PID", str(process.pid), "/T", "/F"),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                shell=False,
+                check=True,
+                timeout=3.0,
+                creationflags=cast(int, getattr(subprocess, "CREATE_NO_WINDOW", 0)),
+            )
+            process.wait(timeout=1.0)
+            return
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            # Keep direct-process termination as a bounded fallback if the
+            # system utility is unavailable or the process already exited.
+            pass
     try:
         if os.name == "posix":
             kill_process_group = cast(Any, os.__dict__["killpg"])

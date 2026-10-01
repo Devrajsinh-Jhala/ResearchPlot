@@ -1,4 +1,4 @@
-"""Create and post-audit one ResearchPlot 1.0 artifact."""
+"""Create and post-audit an artifact using the retained Target compatibility API."""
 
 from pathlib import Path
 

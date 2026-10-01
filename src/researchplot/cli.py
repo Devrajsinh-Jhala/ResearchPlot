@@ -37,7 +37,7 @@ from .models import OutputFormat, VenueProfile
 from .planning import PlanAssessment
 from .profile_lock import ProfileLock, load_profile_lock, verify_profile_lock
 from .project import ProjectConfig
-from .project_api import Project
+from .project_api import PlanPolicyError, Project
 from .registry import list_profiles, load_profile, resolve_profile, search_profiles
 from .remediation import plan_remediation
 from .remote_registry import RegistryClient
@@ -1279,6 +1279,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     except CompliancePolicyError as exc:
         print(f"researchplot: {exc}", file=sys.stderr)
         return 1 if exc.report.verdict is Verdict.NON_COMPLIANT else 3
+    except PlanPolicyError as exc:
+        print(f"researchplot: {exc}", file=sys.stderr)
+        return 1 if exc.assessment.verdict is Verdict.NON_COMPLIANT else 3
     except (
         ArtifactInspectionError,
         FileExistsError,

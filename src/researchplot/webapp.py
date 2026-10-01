@@ -29,7 +29,16 @@ from .registry import list_profiles
 from .target import target
 
 _MAX_UPLOAD_BYTES = 128 * 1024 * 1024
-_SUPPORTED_SUFFIXES = {".eps", ".jpeg", ".jpg", ".pdf", ".png", ".svg", ".tif", ".tiff"}
+_UPLOAD_BASENAMES = {
+    ".eps": "artifact.eps",
+    ".jpeg": "artifact.jpeg",
+    ".jpg": "artifact.jpg",
+    ".pdf": "artifact.pdf",
+    ".png": "artifact.png",
+    ".svg": "artifact.svg",
+    ".tif": "artifact.tif",
+    ".tiff": "artifact.tiff",
+}
 
 
 def _command(argv: list[str]) -> str:
@@ -202,10 +211,11 @@ class _WorkspaceHandler(BaseHTTPRequestHandler):
         profile = query.get("profile", [""])[0]
         filename = Path(query.get("filename", ["artifact"])[0]).name
         suffix = Path(filename).suffix.casefold()
+        upload_basename = _UPLOAD_BASENAMES.get(suffix)
         if not profile:
             self._error(HTTPStatus.BAD_REQUEST, "A profile coordinate is required.")
             return
-        if suffix not in _SUPPORTED_SUFFIXES:
+        if upload_basename is None:
             self._error(HTTPStatus.BAD_REQUEST, f"Unsupported artifact extension {suffix!r}.")
             return
         width = query.get("width", [""])[0] or None
@@ -217,7 +227,9 @@ class _WorkspaceHandler(BaseHTTPRequestHandler):
             return
         try:
             with tempfile.TemporaryDirectory(prefix="researchplot-web-") as directory:
-                artifact = Path(directory) / f"artifact{suffix}"
+                # The client filename is display-only. Only constant, server-owned
+                # basenames may enter the private upload directory or inspector.
+                artifact = Path(directory) / upload_basename
                 artifact.write_bytes(body)
                 report = target(profile, role=role, width=width, content=content).audit(artifact)
             report_payload = report.to_dict()

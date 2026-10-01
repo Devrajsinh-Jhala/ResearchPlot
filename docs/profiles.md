@@ -4,6 +4,15 @@ A profile is an immutable set of venue evidence. It combines identity, scope, wi
 options, declarative rules, source records, caveats, and a digest; it does not contain
 venue-specific executable code.
 
+!!! warning "Historical catalog after the final release"
+
+    Profile maintenance ended on 2026-10-01. The bundled coordinates and digests
+    remain historical snapshots; compare sources and verification dates with current
+    official guidance. Bare conference aliases continue to select installed 2026
+    profiles rather than a future conference year. Year-pinned conference profiles
+    remain immutable and do not receive publisher-style age warnings. See
+    [maintenance status](maintenance.md).
+
 ## Coordinates and digests
 
 The reproducible coordinate is:

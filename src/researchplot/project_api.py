@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import tempfile
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from .compliance import Policy, Report, RuleEngine
+from .compliance import Finding, Outcome, Policy, Report, RuleEngine
 from .models import OutputFormat, RuleLevel, RulePhase, VenueProfile, VenueRule
 from .observations import Observation, ObservationSet
 from .planning import (
@@ -40,6 +41,49 @@ def _rule_matches(rule: VenueRule, target: Target, output_format: OutputFormat |
         content_kind=target.content,
         output_format=output_format,
         width=target.width,
+    )
+
+
+def _referenced_evidence(figure: FigureSpec) -> tuple[Path, ...]:
+    paths = [*figure.source_data, *figure.attachments]
+    if figure.data_table is not None:
+        paths.append(figure.data_table)
+    for panel in figure.panels:
+        paths.extend(panel.source_data)
+    return tuple(dict.fromkeys(paths))
+
+
+def _availability_report(
+    target: Target,
+    *,
+    rule_id: str,
+    phase: RulePhase,
+    paths: Sequence[Path | None],
+    label: str,
+) -> Report:
+    """Record project obligations independently of the venue's encoded rules."""
+
+    missing = tuple(path for path in paths if path is None or not path.is_file())
+    names = tuple(path.name if path is not None else "undeclared path" for path in missing)
+    finding = Finding(
+        rule_id,
+        Outcome.SKIP if missing else Outcome.PASS,
+        RuleLevel.REQUIRED,
+        phase.value,
+        f"{label} is unavailable: {', '.join(names)}." if missing else f"{label} is available.",
+        observed=not missing,
+        expected=True,
+        suggestion="Create or restore the configured file before a complete check or bundle."
+        if missing
+        else None,
+    )
+    return Report(
+        target.coordinate,
+        target.context(),
+        (finding,),
+        profile_digest=target.profile.digest,
+        sources=target.profile.sources,
+        caveats=target.profile.caveats,
     )
 
 
@@ -113,6 +157,21 @@ def _coverage_requirements(figure: FigureSpec, target: Target) -> tuple[Coverage
 
     requirements: dict[tuple[str, str | None, str], CoverageRequirement] = {}
     required_deliverables = tuple(item for item in figure.deliverables if item.required)
+    for deliverable in required_deliverables:
+        item = CoverageRequirement(
+            figure_id=figure.id,
+            deliverable_id=deliverable.id,
+            rule_id="project.deliverable.present",
+            phases=(RulePhase.FILE,),
+        )
+        requirements[item.key] = item
+    if _referenced_evidence(figure):
+        item = CoverageRequirement(
+            figure_id=figure.id,
+            rule_id="project.evidence.present",
+            phases=(RulePhase.BUNDLE,),
+        )
+        requirements[item.key] = item
     for rule in target.profile.rules:
         if rule.level is not RuleLevel.REQUIRED:
             continue
@@ -314,8 +373,36 @@ class Project:
         bundle = _bundle_report(figure, target)
         if bundle.findings:
             evidence.append(PlanEvidence(figure.id, bundle))
+        references = _referenced_evidence(figure)
+        if references:
+            evidence.append(
+                PlanEvidence(
+                    figure.id,
+                    _availability_report(
+                        target,
+                        rule_id="project.evidence.present",
+                        phase=RulePhase.BUNDLE,
+                        paths=references,
+                        label=f"Configured evidence for figure {figure.id!r}",
+                    ),
+                )
+            )
         if include_artifacts:
             for deliverable in figure.deliverables:
+                if deliverable.required:
+                    evidence.append(
+                        PlanEvidence(
+                            figure.id,
+                            _availability_report(
+                                target,
+                                rule_id="project.deliverable.present",
+                                phase=RulePhase.FILE,
+                                paths=(deliverable.path,),
+                                label=f"Required deliverable {figure.id}/{deliverable.id}",
+                            ),
+                            deliverable.id,
+                        )
+                    )
                 if deliverable.path is None or not deliverable.path.is_file():
                     continue
                 report = target.audit(
@@ -365,11 +452,32 @@ class Project:
         unknown = set(provided) - {item.id for item in self.spec.figures}
         if unknown:
             raise ValueError("Live figures reference unknown ids: " + ", ".join(sorted(unknown)))
+        preflight = CompliancePlan(
+            self.profile,
+            self._plan.figures,
+            tuple(
+                requirement
+                for requirement in self._plan.requirements
+                if not (requirement.figure_id in provided and RulePhase.FILE in requirement.phases)
+            ),
+            self._plan.capability_gaps,
+        )
+        preflight_evidence = tuple(
+            evidence
+            for figure in self.spec.figures
+            for evidence in self._figure_evidence(
+                figure,
+                live=provided.get(figure.id),
+                include_artifacts=figure.id not in provided,
+            )
+        )
+        enforce_assessment(preflight.assess(preflight_evidence), self.spec.policy)
         submission = Submission(
             self.profile,
             output_dir=output_dir,
             policy=self.spec.policy,
         )
+        emitted_deliverables: dict[str, tuple[str, ...]] = {}
         for figure in self.spec.figures:
             if figure.attachments:
                 raise ValueError(
@@ -395,6 +503,20 @@ class Project:
             if live is not None:
                 asset = live
                 formats = self.figure(figure.id).export_plan.selected_formats
+                # One exported representation cannot establish two separately declared
+                # required files with the same format.
+                emitted_deliverables[figure.id] = tuple(
+                    next(
+                        item.id
+                        for item in figure.deliverables
+                        if cast(OutputFormat, item.format) == output_format
+                    )
+                    for output_format in formats
+                    if any(
+                        cast(OutputFormat, item.format) == output_format
+                        for item in figure.deliverables
+                    )
+                )
             else:
                 candidates = [
                     item
@@ -411,6 +533,7 @@ class Project:
                     )
                 asset = cast(Path, preferred.path)
                 name = asset.name
+                emitted_deliverables[figure.id] = (preferred.id,)
             submission.add(
                 name,
                 asset,
@@ -423,7 +546,83 @@ class Project:
                 source_data=source_keys[0] if source_keys else None,
                 attestations=dict(figure.attestation_statements),
             )
-        return submission.build()
+        output = Path(output_dir).absolute()
+        if output.exists() or output.is_symlink():
+            raise FileExistsError(f"Submission output already exists: {output}")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(
+            prefix=".researchplot-project-bundle-", dir=output.parent
+        ) as temporary:
+            submission.output_dir = Path(temporary) / output.name
+            result = submission.build()
+            evidence: list[PlanEvidence] = []
+            for figure, item in zip(self.spec.figures, result.items, strict=True):
+                target = self.target(figure.id)
+                evidence.extend(self._figure_evidence(figure, include_artifacts=False))
+                live_findings = tuple(
+                    finding for finding in item.report.findings if finding.phase == "live"
+                )
+                if live_findings:
+                    evidence.append(
+                        PlanEvidence(figure.id, replace(item.report, findings=live_findings))
+                    )
+                for deliverable in figure.deliverables:
+                    if deliverable.id not in emitted_deliverables[figure.id]:
+                        continue
+                    artifact = next(
+                        (
+                            path
+                            for path in item.paths
+                            if coerce_format(path.suffix) == deliverable.format
+                        ),
+                        None,
+                    )
+                    if artifact is None:
+                        continue
+                    findings = tuple(
+                        finding
+                        for finding in item.report.findings
+                        if finding.phase == "file" and finding.artifact == artifact.name
+                    )
+                    evidence.append(
+                        PlanEvidence(
+                            figure.id,
+                            replace(item.report, findings=findings),
+                            deliverable.id,
+                        )
+                    )
+                    if deliverable.required:
+                        evidence.append(
+                            PlanEvidence(
+                                figure.id,
+                                _availability_report(
+                                    target,
+                                    rule_id="project.deliverable.present",
+                                    phase=RulePhase.FILE,
+                                    paths=(artifact,),
+                                    label=f"Required deliverable {figure.id}/{deliverable.id}",
+                                ),
+                                deliverable.id,
+                            )
+                        )
+            enforce_assessment(self._plan.assess(evidence), self.spec.policy)
+            if output.exists() or output.is_symlink():
+                raise FileExistsError(
+                    f"Submission output was created while the bundle was staged: {output}"
+                )
+            result.path.rename(output)
+            return replace(
+                result,
+                path=output,
+                manifest_path=output / result.manifest_path.relative_to(result.path),
+                items=tuple(
+                    replace(
+                        item,
+                        paths=tuple(output / path.relative_to(result.path) for path in item.paths),
+                    )
+                    for item in result.items
+                ),
+            )
 
     def to_dict(self) -> dict[str, object]:
         return {

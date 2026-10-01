@@ -1,5 +1,13 @@
 # ResearchPlot 2.0
 
+!!! warning "Final release: maintenance ended on 2026-10-01"
+
+    **2.0.1** is the final upstream release. No further feature, venue-profile,
+    dependency, or security updates are planned. The source and package remain
+    available under MIT. Read the [maintenance and handoff guide](maintenance.md),
+    preserve a working environment, and compare historical profile sources with the
+    current official venue instructions before submitting.
+
 ## Know what your figure proves before you submit it
 
 ResearchPlot is a local, source-backed venue-compliance compiler. Drop in an existing
@@ -43,7 +51,7 @@ flowchart LR
 ## Audit a saved file
 
 ```bash
-python -m pip install researchplot-venues
+python -m pip install researchplot-venues==2.0.1
 
 researchplot audit figures/figure1.pdf \
   --profile nature@2026.08.0 \
@@ -141,6 +149,7 @@ background profile update.
 | Build and verify a submission directory/archive | [Bundles](bundles.md) |
 | Inspect a compiled manuscript PDF | [Manuscript audit](manuscript.md) |
 | Move from v1 | [Migration](migration.md) |
+| Preserve the final release or maintain a fork | [Maintenance and handoff](maintenance.md) |
 | Review safety boundaries | [Limitations and security](limitations.md) |
 
 ## Supported boundaries

@@ -52,6 +52,14 @@ The builder stages a new directory and refuses to replace an existing destinatio
 normalizes portable relative names, copies source data where representable, records
 reports and profile provenance, and hashes every artifact.
 
+With `policy = "complete"` in a schema-v3 project, the final 2.0.1 builder checks
+coverage-aware project compliance using staged copied or generated outputs before
+committing the submission directory. Known required
+failures block it with CLI exit code `1`; missing required evidence blocks it with
+`3`. Supplied live figures contribute to this gate. Required deliverables and
+referenced evidence must be present; phase-local file passes cannot supply absent
+evidence for another phase.
+
 !!! warning "Current schema-v3 bridge"
 
     `Project.bundle()` currently delegates to the v1 submission manifest. An
@@ -157,6 +165,6 @@ and the author metadata supported by the bridge. It does not prove scientific
 correctness, authorship, venue acceptance, or that every official requirement has been
 encoded.
 
-Run a complete coverage-aware project check before building. A passing v1 bundle item
-report is phase-local; it must not override project-level missing live or manuscript
-evidence.
+The `complete` project build performs the coverage-aware gate itself. Review its
+report and unresolved checks before submission. A passing v1 bundle item report is
+phase-local; it must not override project-level missing live or manuscript evidence.

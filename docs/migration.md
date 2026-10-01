@@ -131,7 +131,7 @@ known venue violation (`1`) and invalid/unsafe input (`2`).
 Install the optional bridge only while migrating:
 
 ```bash
-python -m pip install "researchplot-venues[plots]"
+python -m pip install "researchplot-venues[plots]==2.0.1"
 ```
 
 Legacy functions are available lazily at the top level and from `researchplot.plots`.

@@ -3,6 +3,33 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/) and
 [Semantic Versioning](https://semver.org/).
 
+## [2.0.1] - 2026-10-01
+
+### Fixed
+
+- Prevent missing required deliverables or referenced evidence from producing a
+  passing project verdict. Required failures and missing required evidence retain
+  distinct CLI exit codes `1` and `3`.
+- Gate `Project.bundle()` under the `complete` policy on the coverage-aware project
+  result, including staged outputs and supplied live evidence, before committing the
+  submission directory.
+- Keep client filenames out of local-upload filesystem paths by selecting literal
+  server-owned names for supported formats; add traversal and cleanup regressions.
+- Terminate the Windows inspector process tree on timeout so virtual-environment
+  interpreter children cannot retain temporary-file handles and mask the original
+  budget error during cleanup.
+
+### Changed
+
+- End upstream maintenance with this final release. No future feature, venue-profile,
+  dependency, or security updates are planned; MIT-licensed forks remain welcome.
+- Publish final-release installation, environment-preservation, historical-profile,
+  security-status, and fork handoff guidance. Existing limitations remain documented;
+  deferred roadmap capabilities are not claimed as implemented.
+- Disable scheduled source/security jobs and Dependabot version updates. Release
+  assets include a populated installed-package SBOM and a Python 3.12/Linux runtime
+  dependency snapshot; neither is a cross-platform environment lock.
+
 ## [2.0.0] - 2026-08-13
 
 ### Added

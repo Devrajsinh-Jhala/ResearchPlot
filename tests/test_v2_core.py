@@ -188,6 +188,11 @@ def test_typed_observation_rejects_phase_and_unit_misuse() -> None:
 
 
 def test_typed_attestations_and_waivers_preserve_true_verdict(tmp_path: Path) -> None:
+    fig, _ = plt.subplots()
+    try:
+        fig.savefig(tmp_path / "figure.pdf")
+    finally:
+        plt.close(fig)
     profile = rp.resolve_profile("acm-acmart@2026.08.0")
     attestation = rp.ManualAttestation(
         "metadata.alt_text.distinct_from_caption",

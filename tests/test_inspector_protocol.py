@@ -236,6 +236,33 @@ def test_timeout_and_output_budgets_terminate_inspectors() -> None:
         _client(output_code, limits=output_limits).capabilities("fixture")
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows inherited-file-handle regression")
+def test_windows_timeout_terminates_descendants_and_releases_handles(tmp_path: Path) -> None:
+    marker = tmp_path / "child-ready.txt"
+    child_code = (
+        "import sys, time; "
+        "handle = open(sys.argv[1], 'w'); "
+        "handle.write('ready'); handle.flush(); time.sleep(10)"
+    )
+    code = (
+        "import json, subprocess, sys, time\n"
+        "json.load(sys.stdin)\n"
+        f"subprocess.Popen([sys.executable, '-I', '-c', {child_code!r}, {str(marker)!r}], "
+        "stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr)\n"
+        "time.sleep(10)\n"
+    )
+    limits = InspectorLimits(timeout_seconds=2.0, poll_interval_seconds=0.01)
+
+    with pytest.raises(InspectorTimeoutError, match="wall-clock budget"):
+        _client(code, limits=limits).capabilities("fixture")
+
+    assert marker.read_text(encoding="utf-8") == "ready"
+    # Windows cannot delete the marker while its descendant still owns this
+    # open handle. The protocol temporary directory has also already cleaned up.
+    marker.unlink()
+    assert not marker.exists()
+
+
 def test_protocol_constant_and_configuration_validation(tmp_path: Path) -> None:
     assert PROTOCOL_VERSION == "researchplot-inspector-v1"
     with pytest.raises(ValueError, match="absolute path"):

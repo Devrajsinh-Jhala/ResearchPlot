@@ -6,7 +6,7 @@ an opt-in The Update Framework (TUF) client for a separately operated signed reg
 ## Install and configure trust explicitly
 
 ```bash
-python -m pip install "researchplot-venues[registry]"
+python -m pip install "researchplot-venues[registry]==2.0.1"
 
 researchplot profile sync \
   --base-url https://profiles.example.org/ \

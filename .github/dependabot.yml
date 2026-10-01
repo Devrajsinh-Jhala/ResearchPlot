@@ -1,14 +1,3 @@
 version: 2
-updates:
-  - package-ecosystem: pip
-    directory: "/"
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 5
-    labels: [dependencies, python]
-  - package-ecosystem: github-actions
-    directory: "/"
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 5
-    labels: [dependencies, github-actions]
+# Active maintenance ended on 2026-10-01. Forks can opt back into updates.
+updates: []

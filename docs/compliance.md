@@ -58,6 +58,12 @@ embedded. It cannot reliably prove all original Matplotlib font settings. If the
 profile requires live typography evidence, a project with only that PDF is
 `INDETERMINATE` even when every file-phase check passes.
 
+Version 2.0.1 also treats a missing required deliverable or referenced evidence file
+as missing project evidence, producing `INDETERMINATE` and CLI exit code `3`. A known
+required rule failure remains `NON_COMPLIANT` with code `1`. With the `complete`
+policy, project bundles evaluate this aggregate coverage against staged outputs and
+supplied live figures before committing the submission directory.
+
 ## Report interfaces
 
 A v2 project check returns `PlanAssessment` (also exported as `ValidationReport`):

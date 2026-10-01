@@ -4,7 +4,7 @@ The optional browser workspace audits a saved figure on the same computer. It do
 upload the artifact to a hosted service.
 
 ```bash
-python -m pip install "researchplot-venues[web]"
+python -m pip install "researchplot-venues[web]==2.0.1"
 researchplot serve
 ```
 
@@ -54,9 +54,9 @@ sequenceDiagram
 The browser itself receives the selected local file in order to POST it to loopback
 and, for raster previews, draws it to a local canvas. It does not send it elsewhere.
 
-## What is not in the workspace yet
+## Final workspace limitations
 
-The current interface is single-artifact and file-phase focused. It does not yet:
+The final interface is single-artifact and file-phase focused. It does not:
 
 - create or edit a schema-v3 project;
 - run batch project or manuscript checks;

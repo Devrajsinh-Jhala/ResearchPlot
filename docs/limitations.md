@@ -3,6 +3,10 @@
 ResearchPlot makes evidence and uncertainty explicit; it does not make publication
 requirements fully machine-decidable.
 
+Maintenance ended on 2026-10-01 with version 2.0.1. None of the limitations below is
+scheduled for an upstream fix, and no security or profile updates are promised. See
+[the final-release guide](maintenance.md) for preservation and fork options.
+
 ## Interpret `COMPLIANT` narrowly
 
 `COMPLIANT` means every applicable **encoded required rule** in the selected immutable
@@ -133,6 +137,7 @@ flowchart TD
     I1 --> I2["Do not coerce to COMPLIANT in CI"]
 ```
 
-Report vulnerabilities privately using the process in
+Review the unsupported-release and private-reporting policy in
 [`SECURITY.md`](https://github.com/Devrajsinh-Jhala/ResearchPlot/blob/main/SECURITY.md),
-not a public issue.
+which does not promise a response or future fix. Do not put sensitive artifacts in a
+public issue.

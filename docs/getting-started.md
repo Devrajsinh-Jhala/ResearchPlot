@@ -3,6 +3,10 @@
 This guide starts with an existing artifact, then connects it to a strict project and a
 live Matplotlib figure.
 
+Maintenance ended on 2026-10-01. The instructions install the final **2.0.1** release;
+see [maintenance and environment preservation](maintenance.md) for support status,
+dependency capture, and the historical venue-profile limitations.
+
 ## 1. Install
 
 Create an isolated Python 3.11+ environment:
@@ -13,7 +17,7 @@ Create an isolated Python 3.11+ environment:
     py -3.11 -m venv .venv
     .venv\Scripts\Activate.ps1
     python -m pip install --upgrade pip
-    python -m pip install researchplot-venues
+    python -m pip install researchplot-venues==2.0.1
     ```
 
 === "macOS and Linux"
@@ -22,7 +26,7 @@ Create an isolated Python 3.11+ environment:
     python3.11 -m venv .venv
     source .venv/bin/activate
     python -m pip install --upgrade pip
-    python -m pip install researchplot-venues
+    python -m pip install researchplot-venues==2.0.1
     ```
 
 Confirm the distribution, import, command, and bundled catalog:
@@ -164,7 +168,7 @@ when the selected policy permits it.
 ## 6. Open the local workspace
 
 ```bash
-python -m pip install "researchplot-venues[web]"
+python -m pip install "researchplot-venues[web]==2.0.1"
 researchplot serve
 ```
 

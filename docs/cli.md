@@ -155,6 +155,9 @@ researchplot bundle verify dist/submission.zip
 `bundle build` writes a directory. `archive` creates deterministic ZIP. Verification is
 strict by default; `--manifest NAME` selects a non-default manifest and `--no-strict`
 permits extra files. `--json` is available for automation.
+Under `--policy complete`, schema-v3 builds gate the submission on aggregate project
+coverage after staging outputs. Known required failures return `1`; missing required
+evidence returns `3`, and neither commits the submission directory.
 
 Generate interoperability metadata:
 
@@ -182,7 +185,7 @@ researchplot manuscript check manuscript/paper.pdf --max-pages 500 --json
 `--output FILE` writes JSON. Configuration mode also performs conservative placement
 matching from provenance IDs, exact raster fingerprints, or unique configured hints.
 The command deliberately returns exit code `3` because venue-specific manuscript rules
-are not yet evaluated even when every configured placement is measured.
+are not evaluated even when every configured placement is measured.
 
 ## Plan remediation
 
@@ -205,8 +208,8 @@ researchplot project retarget \
 ```
 
 `--output FILE` writes the plan. `--apply` currently returns exit code `2` with an
-actionable message because a comment-preserving transactional TOML rewriter is not yet
-available. The planner never edits scientific data or claims an existing raster can be
+actionable message because a comment-preserving transactional TOML rewriter is not
+implemented in the final release. The planner never edits scientific data or claims an existing raster can be
 losslessly restyled.
 
 ## Local browser workspace
